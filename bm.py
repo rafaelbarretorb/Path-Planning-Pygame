@@ -47,11 +47,28 @@ white = 255,255,255
 # 1 free cleaned
 grid =  np.zeros([ROWS, COLUMNS])
 
-grid[4][4] = 2
-grid[4][5] = 2
-grid[5][4] = 2
-grid[5][5] = 2
+# Fig. 5
 
+#grid[4][4] = 2
+grid[4][5] = 2
+grid[4][6] = 2
+grid[4][7] = 2
+grid[4][8] = 2
+grid[4][9] = 2
+grid[4][10] = 2
+grid[4][11] = 2
+grid[4][12] = 2
+grid[4][13] = 2
+grid[4][14] = 2
+grid[4][15] = 2
+grid[4][16] = 2
+grid[4][17] = 2
+grid[4][18] = 2
+grid[4][19] = 2
+
+
+
+grid_shape = grid.shape 
 
 print " grid shape " + str(grid.shape)
 
@@ -86,107 +103,88 @@ class Node:
 
 #def path(grid, initial_point):
 
-def u_turn2(grid, row, column):
+def verify(direction, row, column):
+
+    if direction == 'north':
+    	if row <= 0:
+    		return False
+    	elif grid[row-1][column] == 1 or grid[row-1][column] == 2:
+    		return False
+    	else:
+    		return True
+
+    elif direction == 'south':
+    	
+    	if row >= (grid.shape[0] - 1):
+    		return False
+    	elif grid[row+1][column] == 1 or grid[row+1][column] == 2:
+    		return False
+    	else:
+    		print "ERRO1"
+    		return True
+
+    elif direction == 'west':
+    	
+    	if column <= 0:
+    		return False
+    	elif grid[row][column-1] == 1 or grid[row][column-1] == 2:
+    		return False
+    	else:
+    		print "ERRO2"
+    		return True
+
+    elif direction == 'east':
+    	
+    	if column >= (grid.shape[1] - 1):
+    		return False
+    	elif grid[row][column+1] == 1 or grid[row][column+1] == 2:
+    		return False
+    	else:
+    		print "ERRO3"
+    		return True
+
+
+
+#def boustrophedon_motion(grid, start_row, start_column):
+def boustrophedon_motion(grid):
 	# TODO: define priorities: 
 	# if in column change thre is the possibility of up or down move, the robot must go up
 	# if in row change and there is the possibility of right or left move, the robot must go left
 	# count de number of cells cleaned
 
-	move_down = True
-	grid[row][column] = 1
+	row = grid.shape[0] - 1
+	column = 0
 
-	free = True
-	while free:
-		# Right
-		if move_down == True:
-			# I have to verify the next cell
-
-			if verify('down'):
-				pass
-
-			elif verify('right'):
-				pass
-			else:
-				free = False 
-
-		else:
-			if verify('up'):
-				pass
-
-			elif verify('right'):
-				pass
-			else:
-				free = False 
-
-	print grid
-
-def u_turn(grid, row, column):
-
-	move_down = True
 	grid[row][column] = 1
 	draw_point(row,column, green)
 
 	free = True
 	while free:
-		# Right
-		if move_down == True:
-			# I have to verify the next cell
-			if (row + 1) < grid.shape[0] :
 
-				if grid[row+1][column] == 0:
-					# move down and clean
-					row += 1
-					grid[row][column] = 1
-					draw_point(row,column, green)
+		if verify('north',row, column):
+			row -= 1
+			grid[row][column] = 1
+			draw_point(row,column, green)
 
-				elif grid[row][column+1] == 0 and (column+1) < grid.shape[1]:
-					column += 1
-					grid[row][column] = 1
-					draw_point(row,column, green)
-					move_down = False
-				else:
-					free = False 
+		elif verify('south',row, column):
+			row += 1
+			grid[row][column] = 1
+			draw_point(row,column, green)
 
-			else:
-				if (column + 1) < grid.shape[1]:
-					column += 1
-					grid[row][column] = 1
-					draw_point(row,column, green)
-					move_down = False
-				else: 
-					free = False
+		elif verify('east',row, column): # right
+			column += 1
+			grid[row][column] = 1
+			draw_point(row,column, green)
 
+		elif verify('west',row, column): # left
+			column -= 1
+			grid[row][column] = 1
+			draw_point(row,column, green)
 		else:
-			if (row - 1) >= 0:
-				if grid[row-1][column] == 0:
-					# move down and clean
-					row -= 1
-					grid[row][column] = 1
-					draw_point(row,column, green)
-
-				elif grid[row][column+1] == 0 and (column+1) < grid.shape[1]:
-					column += 1
-					grid[row][column] = 1
-					draw_point(row,column, green)
-					move_down = True
-				else:
-					free = False
-			else:
-				if (column + 1) < grid.shape[1]:
-					column += 1
-					grid[row][column] = 1
-					draw_point(row,column, green)
-					move_down = True
-				else:
-					free = False
+			free = False 
+			print "crtic point"
 
 	print grid
-
-
-clock = pygame.time.Clock()
-
-grid_shape = grid.shape 
-
 
 clock = pygame.time.Clock()
 
@@ -294,7 +292,12 @@ def main():
 	grid_size = 1.0  # [m]
 	robot_size = 1.0  # [m]
 
-	obs = [(4,4),(4,5),(5,4),(5,5)]
+	obs = []
+	for i in range(grid.shape[0]):
+		for j in range(grid.shape[1]):
+			if grid[i][j] == 2:
+				obs.append((i,j))
+
 
 	# Build obstacles
 	build_obs(obs)
@@ -315,7 +318,7 @@ def main():
 			column = 0 # x
 			row = 0 # y
 
-			u_turn(grid,0,0)
+			boustrophedon_motion(grid)
 			#rx ,ry = a_star_planning(sx, sy, gx, gy, obs)
 			currentState = 'goalFound'
 
