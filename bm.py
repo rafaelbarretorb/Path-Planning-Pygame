@@ -5,10 +5,6 @@
 
 # ----------
 
-def ccpp(start_y, start_x):
-	pass
-
-
 
 import numpy as np
 import math
@@ -47,9 +43,10 @@ white = 255,255,255
 # 1 free cleaned
 grid =  np.zeros([ROWS, COLUMNS])
 
+# OBSTACLES
+
 # Fig. 5
 
-#grid[4][4] = 2
 grid[4][5] = 2
 grid[4][6] = 2
 grid[4][7] = 2
@@ -89,6 +86,7 @@ delta = [[-1, 0 ], # go up
          [ 1, 0 ], # go down
          [ 0, 1 ]] # go right
 
+backtracking_list = []
 
 class Node:
 
@@ -120,7 +118,6 @@ def verify(direction, row, column):
     	elif grid[row+1][column] == 1 or grid[row+1][column] == 2:
     		return False
     	else:
-    		print "ERRO1"
     		return True
 
     elif direction == 'west':
@@ -130,7 +127,6 @@ def verify(direction, row, column):
     	elif grid[row][column-1] == 1 or grid[row][column-1] == 2:
     		return False
     	else:
-    		print "ERRO2"
     		return True
 
     elif direction == 'east':
@@ -140,9 +136,49 @@ def verify(direction, row, column):
     	elif grid[row][column+1] == 1 or grid[row][column+1] == 2:
     		return False
     	else:
-    		print "ERRO3"
     		return True
 
+def valid_cell(grid, row, column):
+	""" Verify is the cell is valid. """
+	if (row < grid.shape[0] and row >= 0) and (column < grid.shape[1] and column >= 0):
+		return True
+	else:
+		return False
+
+def backtracking_points(grid, row, column):
+	""" Fig. 4"""
+	# fist: verify if is valid cell
+
+	# (a) and (b)
+	if valid_cell(grid,row,(column+1)):
+		if grid[row][column+1] == 0:
+			if valid_cell(grid,(row-1),(column+1)) or row == 0:
+				if grid[(row-1)][(column+1)] == 2:
+					backtracking_list.append((row,column))
+			elif valid_cell(grid,(row+1),(column+1)) or row == (grid.shape[0] - 1):
+				if grid[(row+1)][(column+1)] == 2:
+					backtracking_list.append((row,column))
+
+
+	# (c) and (d)  
+	elif valid_cell(grid,row,(column-1)):
+		if grid[row][column-1] == 0:
+			if valid_cell(grid,(row-1),(column-1)) or row == 0:
+				if grid[(row-1)][(column-1)] == 2:
+					backtracking_list.append((row,column))
+			elif valid_cell(grid,(row+1),(column-1)) or row == (grid.shape[0] - 1):
+				if grid[(row+1)][(column-1)] == 2:
+					backtracking_list.append((row,column))
+
+	# (e) and (f)  
+	elif valid_cell(grid,(row+1),column):
+		if grid[row+1][column] == 0:
+			if valid_cell(grid,row,(column-1)) or column == 0:
+				if grid[row][(column-1)] == 2:
+					backtracking_list.append((row,column))
+			elif valid_cell(grid,row,(column+1)) or column == (grid.shape[1] - 1):
+				if grid[row][(column+1)] == 2:
+					backtracking_list.append((row,column))
 
 
 #def boustrophedon_motion(grid, start_row, start_column):
@@ -164,27 +200,32 @@ def boustrophedon_motion(grid):
 		if verify('north',row, column):
 			row -= 1
 			grid[row][column] = 1
+			backtracking_points(grid, row, column)
 			draw_point(row,column, green)
 
 		elif verify('south',row, column):
 			row += 1
 			grid[row][column] = 1
+			backtracking_points(grid, row, column)
 			draw_point(row,column, green)
 
 		elif verify('east',row, column): # right
 			column += 1
 			grid[row][column] = 1
+			backtracking_points(grid, row, column)
 			draw_point(row,column, green)
 
 		elif verify('west',row, column): # left
 			column -= 1
 			grid[row][column] = 1
+			backtracking_points(grid, row, column)
 			draw_point(row,column, green)
 		else:
 			free = False 
 			print "crtic point"
 
 	print grid
+	print backtracking_list
 
 clock = pygame.time.Clock()
 
