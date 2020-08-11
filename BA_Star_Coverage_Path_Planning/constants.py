@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+
+NORTH = 90
+SOUTH = -90
+EAST = 0
+WEST = 180
+
+NOT_VISITED = 0
+FREE_AND_VISITED = 1
+OCCUPIED = 2
+
+
+# COLORS
+GREEN = 0, 255, 0
+RED = 255, 0, 0
+BLUE = 0, 0, 255
+WHITE = 255,255,255
