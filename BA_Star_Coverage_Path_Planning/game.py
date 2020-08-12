@@ -16,13 +16,13 @@ class Game:
         self.columns_size = columns_size
     
     def initialize_grid(self):
-        #        1
+        #       1
         #     ______
         #    |      |
         # 4  |      |  2
         #    |______|
         #
-        #        3
+        #       3
 
         # External Lines 1234
         # 1

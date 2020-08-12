@@ -1,1 +1,1 @@
-# Path Planning Algorithms demonstration using PyGame
+### Path Planning Algorithms demonstration using PyGame
