@@ -78,6 +78,7 @@ class RRT_Star:
                 node.cost = new_node.cost + self.dist(node.point,new_node.point)
                 # Draw
                 pygame.draw.line(self.screen, GREEN, [node.point[0], node.point[1]], [new_node.point[0], new_node.point[1]], 2)
+                pygame.display.update()
 
         return nodes
 
@@ -125,10 +126,11 @@ class RRT_Star:
                     foundNext = True
 
                     # Draw the new twig
-                    pygame.draw.line(self.screen, GREEN,[new_node.point[0], new_node.point[1]], [parent_node.point[0], parent_node.point[1]], 2)  
+                    pygame.draw.line(self.screen, GREEN,[new_node.point[0], new_node.point[1]], [parent_node.point[0], parent_node.point[1]], 2)
+                    pygame.display.update()
 
             # check if the distance between the goal node and the new node is less than the GOAL_RADIUS
-            if self.is_goal_reached(x_new, self.goal_point, GOAL_RADIUS) and len(nodes) > 2000:
+            if self.is_goal_reached(x_new, self.goal_point, GOAL_RADIUS) and len(nodes) > 100:
                 path_x = list()
                 path_y = list()
                 # 
@@ -148,7 +150,7 @@ class RRT_Star:
                 path_x.insert(0,currentNode.point[0])
                 path_y.insert(0,currentNode.point[1])              
                 
-                print "Nodes Amount: " + str(len(nodes))
+                # print "Nodes Amount: " + str(len(nodes))
                 return path_x, path_y
         
         print "Nodes Amount: " + str(len(nodes))
@@ -164,7 +166,7 @@ class RRT_Star:
         """
         # TODO no collision yet
         for i in range(1000):
-            return (random.random() - 0.5)*10, (random.random() - 0.5)*10
+            return (random.random())*500, (random.random())*500
 
         sys.exit("ERROR MESSAGE: Samples in free space fail after 1000 attempts!!!")
 
