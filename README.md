@@ -3,4 +3,4 @@
 
 RRT* Path Planning Algorithm (No obstacles for now)
 
-![](gifs/rrt-star.gif)
+![](RRT_Star/gifs/rrt-star.gif)
