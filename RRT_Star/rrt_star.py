@@ -7,9 +7,9 @@ import sys
 from datetime import datetime
 import time
 
-RADIUS = 10.0
+RADIUS = 50.0
 
-from constants import GREEN, WHITE, RED, BLACK
+from constants import GREEN, WHITE, RED, BLACK, BLUE, YELLOW
 import pygame
 
 
@@ -52,9 +52,10 @@ class RRT_Star:
         self.goal_found = False
 
         self.nodes = list()
+        self.goal_node = None
 
         # Draw start and goal
-        pygame.draw.circle(self.screen, BLACK, (self.start_point[0], self.start_point[1]), self.goal_tolerance)
+        pygame.draw.circle(self.screen, YELLOW, self.start_point, self.goal_tolerance)
         pygame.draw.circle(self.screen, BLACK, (self.goal_point[0], self.goal_point[1]), self.goal_tolerance)
 
 
@@ -85,15 +86,21 @@ class RRT_Star:
     def rewire(self, nodes, new_node):
         for i in range(len(nodes)):
             node = nodes[i]
+            pygame.draw.circle(self.screen, GREEN, node.point, 4)
+
             if node != new_node.parent and self.dist(node.point,new_node.point) < RADIUS and new_node.cost + self.dist(node.point,new_node.point) < node.cost:
                 # Delete, paint white
                 pygame.draw.line(self.screen, WHITE, [node.point[0], node.point[1]], [node.parent.point[0], node.parent.point[0]], 2) 
                 node.parent = new_node
                 node.cost = new_node.cost + self.dist(node.point,new_node.point)
                 # Draw
-                pygame.draw.line(self.screen, GREEN, [node.point[0], node.point[1]], [new_node.point[0], new_node.point[1]], 2)
-                pygame.display.update()
+                pygame.draw.line(self.screen, BLUE, [node.point[0], node.point[1]], [new_node.point[0], new_node.point[1]], 2)
+                
+            else:
+                if node.parent != None:
+                    pygame.draw.line(self.screen, BLUE, node.point, node.parent.point, 2)
 
+        pygame.display.update()
         return nodes
 
     def path_planning(self):
@@ -114,8 +121,7 @@ class RRT_Star:
         initialNode = Node(self.start_point, None)
         self.nodes.append(initialNode)
 
-        while len(self.nodes) < self.max_num_nodes: # and (datetime.now() - self.start_time).total_seconds() < 30 and not ((datetime.now() - self.start_time).total_seconds() > 5 and len(nodes) < 20):
-
+        while len(self.nodes) < self.max_num_nodes:
             found_next = False
             
             # search a node until get one in free space
@@ -133,53 +139,40 @@ class RRT_Star:
                     found_next = True
 
                     # Draw the new twig
-                    pygame.draw.line(self.screen, GREEN, new_node.point, parent_node.point, 2)
+                    pygame.draw.line(self.screen, BLUE, new_node.point, parent_node.point, 2)
+                    pygame.draw.circle(self.screen, GREEN, new_node.point, 4)
                     pygame.display.update()
-                    time.sleep(0.05)
+                    # time.sleep(0.05)
 
-                if not self.goal_found:
-                    # check if the distance between the goal node and the new node is less than the goal tolerance
-                    if self.is_goal_reached(x_new, self.goal_point, self.goal_tolerance):
-                        new_goal_node = self.nodes[len(self.nodes)-1]
-                        self.goal_found = True
-                else:
-                    # Final path
-                    current_node = new_goal_node
-                    while current_node.parent != None:
-                        self.path.insert(0, current_node.point)
-                        current_node = current_node.parent
-
-                    # Add the start point
-                    self.path.insert(0, current_node.point)
-                    
-                    # print "Nodes Amount: " + str(len(nodes))
-
-                    self.draw_final_path(path)
-
-                    if len(self.nodes) > self.min_num_nodes:
-                        time.sleep(10)
-                        return self.path
+            if not self.goal_found:
+                # check if the distance between the goal node and the new node is less than the goal tolerance
+                if self.is_goal_reached(x_new, self.goal_point, self.goal_tolerance):
+                    self.goal_found = True
+                    self.goal_node = self.nodes[len(self.nodes)-1]
+                    self.compute_path()
+            else:
+                self.compute_path()
         
         print "Nodes Amount: " + str(len(self.nodes))
         return [], []
     
-    def compute_final_path(self):
-        # Final path
-        current_node = new_goal_node
+    def compute_path(self):
+        path = list()
+        current_node = self.goal_node
         while current_node.parent != None:
-            self.path.insert(0, current_node.point)
+            path.insert(0, current_node.point)
             current_node = current_node.parent
 
         # Add the start point
-        self.path.insert(0, current_node.point)
+        path.insert(0, current_node.point)
         
         # print "Nodes Amount: " + str(len(nodes))
 
         self.draw_final_path(path)
 
-        if len(self.nodes) > self.min_num_nodes:
+        if len(self.nodes) > self.max_num_nodes:
             time.sleep(10)
-            return self.path
+            return path
 
     def draw_final_path(self, path):
         """ ."""
@@ -193,7 +186,10 @@ class RRT_Star:
             pygame.draw.line(self.screen, RED, path[i], path[i + 1], 4)
         
         pygame.display.update()
-        self.path_old = path
+        self.path_old = path[:]
+        # Draw start and goal
+        pygame.draw.circle(self.screen, YELLOW, (self.start_point[0], self.start_point[1]), 10)
+        pygame.draw.circle(self.screen, BLACK, (self.goal_point[0], self.goal_point[1]), self.goal_tolerance)
 
     def sample_free(self):
         """  Get a random point located in a free area
@@ -205,7 +201,7 @@ class RRT_Star:
         """
         # TODO no collision yet
         for i in range(1000):
-            return (random.random())*500, (random.random())*500
+            return int((random.random())*500), int((random.random())*500)
 
         sys.exit("ERROR MESSAGE: Samples in free space fail after 1000 attempts!!!")
 
@@ -221,7 +217,7 @@ class RRT_Star:
             return p2
         else:
             theta = math.atan2(p2[1]-p1[1],p2[0]-p1[0])
-            return p1[0] + self.epsilon_max*math.cos(theta), p1[1] + self.epsilon_max*math.sin(theta)
+            return int(p1[0] + self.epsilon_max*math.cos(theta)), int(p1[1] + self.epsilon_max*math.sin(theta))
 
     def get_nearest(self, nodes, x_rand):
         # seach

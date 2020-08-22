@@ -10,8 +10,8 @@ XDIM = 500
 YDIM = 500
 WINSIZE = [XDIM, YDIM]
 EPSILON = 7.0
-MAX_NUM_NODES = 2000
-MIN_NUM_NODES = 500
+MAX_NUM_NODES = 10000
+MIN_NUM_NODES = 1000
 
 def main():
     pygame.init()
@@ -22,7 +22,7 @@ def main():
     start_point = [200, 200]
     goal_point = [400, 400]
     goal_tolerance = 20
-    rrt_star = RRT_Star(start_point, goal_point, MAX_NUM_NODES, MIN_NUM_NODES, goal_tolerance, 5, 30, screen)
+    rrt_star = RRT_Star(start_point, goal_point, MAX_NUM_NODES, MIN_NUM_NODES, goal_tolerance, 0, 30, screen)
 
     path = rrt_star.path_planning()
     for e in pygame.event.get():
