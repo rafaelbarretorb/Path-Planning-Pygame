@@ -9,7 +9,7 @@ import time
 
 RADIUS = 50.0
 
-from constants import GREEN, WHITE, RED, BLACK, BLUE, YELLOW
+from constants import GREEN, WHITE, RED, BLACK, BLUE, YELLOW, PURPLE, DARK_GREEN
 import pygame
 
 
@@ -55,9 +55,25 @@ class RRT_Star:
         self.goal_node = None
 
         # Draw start and goal
-        pygame.draw.circle(self.screen, YELLOW, self.start_point, self.goal_tolerance)
-        pygame.draw.circle(self.screen, BLACK, (self.goal_point[0], self.goal_point[1]), self.goal_tolerance)
 
+        # START SQUARE
+        width = 20
+        height = width
+        left = self.start_point[0] - width/2
+        top = self.start_point[1] - height/2
+        self.start_square = pygame.Rect(left, top, width, height)
+        
+        self.constant_draw()
+        pygame.display.update()
+        time.sleep(2)
+
+    def constant_draw(self):
+        # START POINT --> YELLOW SQUARE
+        pygame.draw.rect(self.screen, YELLOW, self.start_square, 0)
+        pygame.draw.rect(self.screen, BLACK, self.start_square, 2)
+
+        # GOAL POINT --> GRAY CIRCLE
+        pygame.draw.circle(self.screen, PURPLE, self.goal_point, self.goal_tolerance)
 
     def dist(self, p1,p2):    
         """ Class method for compute the distance between two points.
@@ -74,34 +90,43 @@ class RRT_Star:
         return distance
 
 
-    def choose_parent(self,nn,new_node,nodes):
-        for node in nodes:
-            if self.dist(node.point,new_node.point) < RADIUS and node.cost + self.dist(node.point, new_node.point) < nn.cost + self.dist(nn.point,new_node.point):
-                nn = node
-        new_node.cost = nn.cost + self.dist(nn.point,new_node.point)
-        new_node.parent = nn
+    def choose_parent(self, new_node, parent):
+        """ ."""
+        for node in self.nodes:
+            if self.dist(node.point, new_node.point) < RADIUS and \
+               node.cost + self.dist(node.point, new_node.point) < parent.cost + self.dist(parent.point, new_node.point):
 
+                parent = node
+
+        new_node.cost = parent.cost + self.dist(parent.point, new_node.point)
+        new_node.parent = parent
         return new_node
 
-    def rewire(self, nodes, new_node):
-        for i in range(len(nodes)):
-            node = nodes[i]
+    def rewire(self, new_node):
+        """ ."""
+        for node in self.nodes:
             pygame.draw.circle(self.screen, GREEN, node.point, 4)
 
-            if node != new_node.parent and self.dist(node.point,new_node.point) < RADIUS and new_node.cost + self.dist(node.point,new_node.point) < node.cost:
+            if node != new_node.parent and \
+               self.dist(node.point, new_node.point) < RADIUS and \
+               new_node.cost + self.dist(node.point, new_node.point) < node.cost:
+
                 # Delete, paint white
-                pygame.draw.line(self.screen, WHITE, [node.point[0], node.point[1]], [node.parent.point[0], node.parent.point[0]], 2) 
+                pygame.draw.line(self.screen, WHITE, node.point, node.parent.point, 2) 
+
+                # Now the node parent is the new node
                 node.parent = new_node
-                node.cost = new_node.cost + self.dist(node.point,new_node.point)
+                node.cost = new_node.cost + self.dist(node.point, new_node.point)
                 # Draw
-                pygame.draw.line(self.screen, BLUE, [node.point[0], node.point[1]], [new_node.point[0], new_node.point[1]], 2)
+                pygame.draw.line(self.screen, BLUE, node.point, new_node.point, 2)
                 
             else:
                 if node.parent != None:
                     pygame.draw.line(self.screen, BLUE, node.point, node.parent.point, 2)
 
+        self.constant_draw()
         pygame.display.update()
-        return nodes
+
 
     def path_planning(self):
         """ RRT* (RRT Star) Path Planning
@@ -133,9 +158,9 @@ class RRT_Star:
                 if self.obstacle_free(x_nearest, x_new):
                     parent_node = x_nearest
                     new_node = Node(x_new, parent_node)
-                    new_node = self.choose_parent(parent_node, new_node, self.nodes)
+                    new_node = self.choose_parent(new_node, parent_node)
                     self.nodes.append(new_node)
-                    self.nodes = self.rewire(self.nodes, new_node)            
+                    self.rewire(new_node)            
                     found_next = True
 
                     # Draw the new twig
@@ -144,14 +169,18 @@ class RRT_Star:
                     pygame.display.update()
                     # time.sleep(0.05)
 
+            path = list()
             if not self.goal_found:
                 # check if the distance between the goal node and the new node is less than the goal tolerance
                 if self.is_goal_reached(x_new, self.goal_point, self.goal_tolerance):
                     self.goal_found = True
                     self.goal_node = self.nodes[len(self.nodes)-1]
-                    self.compute_path()
+                    path = self.compute_path()
             else:
-                self.compute_path()
+                path = self.compute_path()
+            
+            if len(self.nodes) > self.min_num_nodes:
+                return path
         
         print "Nodes Amount: " + str(len(self.nodes))
         return [], []
@@ -169,10 +198,7 @@ class RRT_Star:
         # print "Nodes Amount: " + str(len(nodes))
 
         self.draw_final_path(path)
-
-        if len(self.nodes) > self.max_num_nodes:
-            time.sleep(10)
-            return path
+        return path
 
     def draw_final_path(self, path):
         """ ."""
@@ -188,8 +214,8 @@ class RRT_Star:
         pygame.display.update()
         self.path_old = path[:]
         # Draw start and goal
-        pygame.draw.circle(self.screen, YELLOW, (self.start_point[0], self.start_point[1]), 10)
-        pygame.draw.circle(self.screen, BLACK, (self.goal_point[0], self.goal_point[1]), self.goal_tolerance)
+        # pygame.draw.circle(self.screen, YELLOW, (self.start_point[0], self.start_point[1]), 10)
+        # pygame.draw.circle(self.screen, BLACK, (self.goal_point[0], self.goal_point[1]), self.goal_tolerance)
 
     def sample_free(self):
         """  Get a random point located in a free area

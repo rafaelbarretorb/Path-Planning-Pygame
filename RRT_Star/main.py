@@ -10,8 +10,8 @@ XDIM = 500
 YDIM = 500
 WINSIZE = [XDIM, YDIM]
 EPSILON = 7.0
-MAX_NUM_NODES = 10000
-MIN_NUM_NODES = 1000
+MAX_NUM_NODES = 5000
+MIN_NUM_NODES = 2000
 
 def main():
     pygame.init()
@@ -25,10 +25,18 @@ def main():
     rrt_star = RRT_Star(start_point, goal_point, MAX_NUM_NODES, MIN_NUM_NODES, goal_tolerance, 0, 30, screen)
 
     path = rrt_star.path_planning()
-    for e in pygame.event.get():
-        if e.type == QUIT or (e.type == KEYUP and e.key == K_ESCAPE):
-            sys.exit("Leaving because you requested it.")
-    pygame.display.update()
+    pause = True
+    # for e in pygame.event.get():
+    #     if e.type == QUIT or (e.type == KEYUP and e.key == K_ESCAPE):
+    #         sys.exit("Leaving because you requested it.")
+    # pygame.display.update()
+
+    while pause:
+        for event in pygame.event.get():
+
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
 
 if __name__ == '__main__':
     main()
