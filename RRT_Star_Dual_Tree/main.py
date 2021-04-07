@@ -1,6 +1,6 @@
 
 
-from rrt_star import RRT_Star
+from rrt_star_dual_tree import RRT_Star
 import pygame
 from pygame.locals import *
 import sys
@@ -24,7 +24,7 @@ def main():
     goal_tolerance = 20
     rrt_star = RRT_Star(start_point, goal_point, MAX_NUM_NODES, MIN_NUM_NODES, goal_tolerance, 0, 30, screen)
 
-    path = rrt_star.path_planning()
+    path = rrt_star.planning()
     pause = True
     # for e in pygame.event.get():
     #     if e.type == QUIT or (e.type == KEYUP and e.key == K_ESCAPE):
