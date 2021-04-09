@@ -25,6 +25,8 @@ class RRT_Star:
     def __init__(self, start_point, goal_point,
                  max_num_nodes, min_num_nodes,
                  goal_tolerance, epsilon_min, epsilon_max, screen):
+        
+        
 
         self.screen = screen
 
@@ -41,8 +43,8 @@ class RRT_Star:
 
         self.goal_tolerance = goal_tolerance
 
-        self.start_tree = Tree(start_point, vertex_color=GREEN, edge_color=BLUE, epsilon_min=epsilon_min, epsilon_max=epsilon_max, screen=screen)
-        self.goal_tree = Tree(goal_point, vertex_color=RED, edge_color=BLACK, epsilon_min=epsilon_min, epsilon_max=epsilon_max, screen=screen)
+        self.start_tree = Tree(start_point, vertex_color=GREEN, edge_color=GREEN, epsilon_min=epsilon_min, epsilon_max=epsilon_max, screen=screen)
+        self.goal_tree = Tree(goal_point, vertex_color=RED, edge_color=RED, epsilon_min=epsilon_min, epsilon_max=epsilon_max, screen=screen)
 
         # self.path = list()
         self.path_old = list()
@@ -62,57 +64,83 @@ class RRT_Star:
         pygame.display.update()
         time.sleep(2)
 
+
     def constant_draw(self):
         # START POINT --> YELLOW SQUARE
-        pygame.draw.rect(self.screen, YELLOW, self.start_square, 0)
-        pygame.draw.rect(self.screen, BLACK, self.start_square, 2)
+        # pygame.draw.rect(self.screen, YELLOW, self.start_square, 0)
+        # pygame.draw.rect(self.screen, BLACK, self.start_square, 2)
+        pygame.draw.circle(self.screen, GREEN, self.start_point, 8)
 
         # GOAL POINT --> GRAY CIRCLE
-        pygame.draw.circle(self.screen, PURPLE, self.goal_point, self.goal_tolerance)
+        # pygame.draw.circle(self.screen, PURPLE, self.goal_point, self.goal_tolerance)
+        pygame.draw.circle(self.screen, RED, self.goal_point, 8)
 
 
     def planning(self):
         """ ."""
-        start_new_node = None
-        goal_new_node = None
+        count = 0
         start_time = True
         while self.start_tree.get_nodes_length() < self.max_num_nodes or self.goal_tree.get_nodes_length() < self.max_num_nodes:
-            time.sleep(0.05)
             if start_time:
                 # Start Tree grows
                 self.start_tree.grow_tree()
 
-                #
-                start_new_node = self.start_tree.get_new_node()
+                # Start Tree new node
+                st_new_node = self.start_tree.get_new_node()
+                # print "new node: " + str(st_new_node.point)
+                # print ""
 
-                if (goal_new_node is not None and self.start_tree.attempt_connect(goal_new_node)):
+
+                if (self.goal_found is not True and self.goal_tree.attempt_connect(st_new_node)):
                     self.goal_found = True
-                    goal_node_path = self.goal_tree.get_path()
+                    gt_x_nearest_ext = self.goal_tree.get_x_nearest_external()
+
+                    print "nearest ext node: " + str(gt_x_nearest_ext.point)
+                    
+                    # Get nodes path from GOAL Tree
+                    external_nodes = self.goal_tree.get_external_nodes(gt_x_nearest_ext)
+                    
+                    #  Add nodes path to START Tree
+                    self.start_tree.add_nodes_to_tree(external_nodes, st_new_node)
+                
+                if self.goal_found:
+                    count = count + 1
+                    if count > 2:
+                        return
 
                 if not self.goal_found:
+                    # 
                     start_time = False
             else:
                 # Goal Tree grows
                 self.goal_tree.grow_tree()
 
-                #
-                goal_new_node = self.goal_tree.get_new_node()
+                # Goal Tree new node
+                gt_new_node = self.goal_tree.get_new_node()
+                # print "new node: " + str(gt_new_node.point)
+                # print ""
 
-                if (start_new_node is not None and self.start_tree.attempt_connect(start_new_node)):
-                    self.goal_found = True    
+                if (self.goal_found is not True and self.start_tree.attempt_connect(gt_new_node)):
+                    self.goal_found = True
+                    st_x_nearest_ext = self.start_tree.get_x_nearest_external()
+                    print "nearest ext node: " + str(st_x_nearest_ext.point)
+                    
+                    # Get nodes path from START Tree
+                    external_nodes = self.start_tree.get_external_nodes(st_x_nearest_ext)
+
+                    # Add nodes path to GOAL Tree
+                    self.goal_tree.add_nodes_to_tree(external_nodes, gt_new_node)
+                
+                if self.goal_found:
+                    count = count + 1
+                    if count > 2:
+                        return
 
                 if not self.goal_found:
                     start_time = True 
 
             # path = list()
-            # if not self.goal_found:
-            #     # check if the distance between the goal node and the new node is less than the goal tolerance
-            #     if self.is_goal_reached(x_new, self.goal_point, self.goal_tolerance):
-            #         self.goal_found = True
-            #         self.goal_node = self.nodes[len(self.nodes)-1]
-            #         path = self.compute_path()
-            # else:
-            #     path = self.compute_path()
+            # path = self.compute_path()
             
             # if len(self.nodes) > self.min_num_nodes:
             #     return path
