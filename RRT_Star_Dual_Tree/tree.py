@@ -195,6 +195,12 @@ class Tree:
 	def erase_edge(self, point1, point2):
 		pygame.draw.line(self.screen, WHITE, point1, point2, 2)
 
+	def draw_path(self, point1, point2):
+		pygame.draw.line(self.screen, BLACK, point1, point2, 4)
+
+	def erase_path(self, point1, point2):
+		pygame.draw.line(self.screen, WHITE, point1, point2, 4)
+
 	def draw_vertex(self, point):
 		pygame.draw.circle(self.screen, self.v_color, point, 4)
 
@@ -232,9 +238,9 @@ class Tree:
 		self.goal = self.nodes[len(self.nodes)-1]
 		pygame.display.update()
 
-	def get_goal_node(self):
-		""" First node of other tree."""
-		return self.goal
+	# def get_goal_node(self):
+	# 	""" First node of other tree."""
+	# 	return self.goal
 	
 	def block_tree(self):
 		""" This tree does not grow anymore."""
@@ -245,15 +251,13 @@ class Tree:
 		path = list()
 		current_node = self.goal
 		while current_node.parent != None:
-			path.append(current_node.point)
+			path.insert(0, current_node.point)
 			current_node = current_node.parent
 
 		# Add the start point
-		path.append(current_node.point)
+		path.insert(0, current_node.point)
 		
 		# print "Nodes Amount: " + str(len(nodes))
-
-		# print self.get_nodes_length()
 
 		self.draw_final_path(path)
 		return path
@@ -262,15 +266,15 @@ class Tree:
 		""" ."""
 		# Draw old path with WHITE
 		for i in range(len(self.path_old) - 1):
-			pygame.draw.line(self.screen, WHITE, self.path_old[i], self.path_old[i + 1], 5) 
-			
-		# pygame.display.update()
+			self.erase_path(self.path_old[i], self.path_old[i + 1])
+		
+		self.path_old = []
+
+		pygame.display.update()
 		# Draw current path with RED
 		for i in range(len(path) - 1):
-			pygame.draw.line(self.screen, BLACK, path[i], path[i + 1], 4)
+			self.draw_path(path[i], path[i + 1])
 		
-		# pygame.display.update()
-		self.path_old = path[:]
-        # Draw start and goal
-        # pygame.draw.circle(self.screen, YELLOW, (self.start_point[0], self.start_point[1]), 10)
-        # pygame.draw.circle(self.screen, BLACK, (self.goal_point[0], self.goal_point[1]), self.goal_tolerance)
+		pygame.display.update()
+		
+

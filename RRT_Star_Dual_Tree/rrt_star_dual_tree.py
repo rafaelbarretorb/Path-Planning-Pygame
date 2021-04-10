@@ -67,7 +67,7 @@ class RRT_Star:
 
     def constant_draw(self):
         # START POINT --> YELLOW SQUARE
-        pygame.draw.circle(self.screen, GREEN, self.start_point, 2)
+        pygame.draw.circle(self.screen, GREEN, self.start_point, 8)
 
         # GOAL POINT --> GRAY CIRCLE
         pygame.draw.circle(self.screen, RED, self.goal_point, 8)
@@ -138,10 +138,10 @@ class RRT_Star:
                     start_time = True 
 
             if self.goal_found:
-                # path = self.tree.compute_path()
-                if self.tree.get_nodes_length() > self.min_num_nodes:
-                    print "TEST"
-                    return path
+                path = self.tree.compute_path()
+                # if self.tree.get_nodes_length() > self.min_num_nodes:
+                #     print "TEST"
+                #     return path
         
         return [], []
     
