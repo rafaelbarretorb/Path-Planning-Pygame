@@ -43,9 +43,9 @@ class RRT_Star:
 
         self.goal_tolerance = goal_tolerance
 
-        self.start_tree = Tree(start_point, vertex_color=GREEN, edge_color=GREEN, epsilon_min=epsilon_min, epsilon_max=epsilon_max, screen=screen)
-        self.goal_tree = Tree(goal_point, vertex_color=RED, edge_color=RED, epsilon_min=epsilon_min, epsilon_max=epsilon_max, screen=screen)
-
+        self.start_tree = Tree('start', start_point, vertex_color=GREEN, edge_color=GREEN, epsilon_min=epsilon_min, epsilon_max=epsilon_max, screen=screen)
+        self.goal_tree = Tree('goal', goal_point, vertex_color=RED, edge_color=RED, epsilon_min=epsilon_min, epsilon_max=epsilon_max, screen=screen)
+        self.tree = None
         # self.path = list()
         self.path_old = list()
 
@@ -67,12 +67,9 @@ class RRT_Star:
 
     def constant_draw(self):
         # START POINT --> YELLOW SQUARE
-        # pygame.draw.rect(self.screen, YELLOW, self.start_square, 0)
-        # pygame.draw.rect(self.screen, BLACK, self.start_square, 2)
-        pygame.draw.circle(self.screen, GREEN, self.start_point, 8)
+        pygame.draw.circle(self.screen, GREEN, self.start_point, 2)
 
         # GOAL POINT --> GRAY CIRCLE
-        # pygame.draw.circle(self.screen, PURPLE, self.goal_point, self.goal_tolerance)
         pygame.draw.circle(self.screen, RED, self.goal_point, 8)
 
 
@@ -93,9 +90,14 @@ class RRT_Star:
 
                 if (self.goal_found is not True and self.goal_tree.attempt_connect(st_new_node)):
                     self.goal_found = True
+
+                    # Block Goal Tree
+                    self.goal_tree.block_tree()
+                    self.tree = self.start_tree
+
                     gt_x_nearest_ext = self.goal_tree.get_x_nearest_external()
 
-                    print "nearest ext node: " + str(gt_x_nearest_ext.point)
+                    #print "nearest ext node: " + str(gt_x_nearest_ext.point)
                     
                     # Get nodes path from GOAL Tree
                     external_nodes = self.goal_tree.get_external_nodes(gt_x_nearest_ext)
@@ -103,10 +105,6 @@ class RRT_Star:
                     #  Add nodes path to START Tree
                     self.start_tree.add_nodes_to_tree(external_nodes, st_new_node)
                 
-                if self.goal_found:
-                    count = count + 1
-                    if count > 2:
-                        return
 
                 if not self.goal_found:
                     # 
@@ -122,46 +120,32 @@ class RRT_Star:
 
                 if (self.goal_found is not True and self.start_tree.attempt_connect(gt_new_node)):
                     self.goal_found = True
+
+                    # Block Start Tree
+                    self.start_tree.block_tree()
+                    self.tree = self.goal_tree
+
                     st_x_nearest_ext = self.start_tree.get_x_nearest_external()
-                    print "nearest ext node: " + str(st_x_nearest_ext.point)
                     
                     # Get nodes path from START Tree
                     external_nodes = self.start_tree.get_external_nodes(st_x_nearest_ext)
 
                     # Add nodes path to GOAL Tree
                     self.goal_tree.add_nodes_to_tree(external_nodes, gt_new_node)
-                
-                if self.goal_found:
-                    count = count + 1
-                    if count > 2:
-                        return
+    
 
                 if not self.goal_found:
                     start_time = True 
 
-            # path = list()
-            # path = self.compute_path()
-            
-            # if len(self.nodes) > self.min_num_nodes:
-            #     return path
+            if self.goal_found:
+                # path = self.tree.compute_path()
+                if self.tree.get_nodes_length() > self.min_num_nodes:
+                    print "TEST"
+                    return path
         
         return [], []
     
-    def compute_path(self):
-        """ ."""
-        path = list()
-        current_node = self.goal_node
-        while current_node.parent != None:
-            path.insert(0, current_node.point)
-            current_node = current_node.parent
 
-        # Add the start point
-        path.insert(0, current_node.point)
-        
-        # print "Nodes Amount: " + str(len(nodes))
-
-        self.draw_final_path(path)
-        return path
 
     def draw_final_path(self, path):
         """ ."""
