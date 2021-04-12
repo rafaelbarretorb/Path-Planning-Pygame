@@ -24,8 +24,7 @@ def main():
     goal_tolerance = 20
     rrt_star = RRT_Star(start_point, goal_point, MAX_NUM_NODES, MIN_NUM_NODES, goal_tolerance, 0, 30, screen)
 
-    # path = rrt_star.planning()
-    path = rrt_star.planning2()
+    path = rrt_star.planning()
     pause = True
     # for e in pygame.event.get():
     #     if e.type == QUIT or (e.type == KEYUP and e.key == K_ESCAPE):
