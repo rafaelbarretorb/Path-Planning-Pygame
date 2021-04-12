@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 
-from constants import GREEN, RED, BLACK
+from constants import GREEN, RED, BLACK, BLUE
 from tree import Tree
 
+import pygame
 
-class RRT_Star:
+
+class RRTStarDualTree:
     """ Class for RRT* Path Planning. """
     def __init__(self, start_point, goal_point,
                  max_num_nodes, min_num_nodes,
                  goal_tolerance, epsilon_min, epsilon_max, screen):
         self.screen = screen
-
-        self.start_point = start_point[:]
-        self.goal_point = goal_point[:]
+        self.start_point = start_point
+        self.goal_point = goal_point
 
         self.max_num_nodes = max_num_nodes
         self.min_num_nodes = min_num_nodes
@@ -25,25 +26,25 @@ class RRT_Star:
                                start_point,
                                node_color=GREEN,
                                connection_color=GREEN,
-                               goal_node_color=RED,
-                               path_color=BLACK,
+                               goal_node_color=BLUE,
+                               path_color=RED,
                                goal_tolerance=20,
                                epsilon_min=epsilon_min,
                                epsilon_max=epsilon_max,
                                max_num_nodes=5000,
-                               screen=screen)
+                               screen=self.screen)
 
         self.goal_tree = Tree('goal',
                               goal_point,
-                              node_color=RED,
-                              connection_color=RED,
+                              node_color=BLUE,
+                              connection_color=BLUE,
                               goal_node_color=GREEN,
-                              path_color=BLACK,
+                              path_color=RED,
                               goal_tolerance=20,
                               epsilon_min=epsilon_min,
                               epsilon_max=epsilon_max,
                               max_num_nodes=5000,
-                              screen=screen)
+                              screen=self.screen)
 
         self.tree = None
 
@@ -52,6 +53,7 @@ class RRT_Star:
     def planning(self):
         """ ."""
         while self.keep_searching():
+            pygame.display.update()
             # Start Tree's turn
             self.run_tree(self.start_tree, self.goal_tree)
 

@@ -1,10 +1,10 @@
 
 
-from rrt_star_dual_tree import RRT_Star
+from rrt_star_dual_tree import RRTStarDualTree
 import pygame
 from pygame.locals import *
 import sys
-from constants import WHITE, GREEN, RED
+from constants import WHITE
 
 XDIM = 500
 YDIM = 500
@@ -22,7 +22,7 @@ def main():
     start_point = [50, 50]
     goal_point = [400, 400]
     goal_tolerance = 20
-    rrt_star = RRT_Star(start_point, goal_point, MAX_NUM_NODES, MIN_NUM_NODES, goal_tolerance, 0, 30, screen)
+    rrt_star = RRTStarDualTree(start_point, goal_point, MAX_NUM_NODES, MIN_NUM_NODES, goal_tolerance, 0, 30, screen)
 
     path = rrt_star.planning()
     pause = True

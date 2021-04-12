@@ -60,6 +60,8 @@ class Tree:
 		# Draw Tree Start Node
 		self.draw_node(start_point, radius=8)
 
+		pygame.display.update()
+
 	def get_nodes_length(self):
 		""" ."""
 		return len(self.nodes)
@@ -289,11 +291,11 @@ class Tree:
 
 	def draw_path(self, point1, point2):
 		""" Draw a path line between two nodes with a larger width."""
-		pygame.draw.line(self.screen, self.path_color, point1, point2, 8)
+		pygame.draw.line(self.screen, self.path_color, point1, point2, 4)
 
 	def erase_path(self, point1, point2):
 		""" Erase the path line between two nodes."""
-		pygame.draw.line(self.screen, WHITE, point1, point2, 8)
+		pygame.draw.line(self.screen, WHITE, point1, point2, 4)
 
 	def draw_node(self, point, radius=4, color=None):
 		""" Draw a circle representing a node."""
