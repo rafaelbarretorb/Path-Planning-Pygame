@@ -8,14 +8,12 @@ import time
 
 import sys
 
-
-# POSSIBLE PROBLEMS
-
-# x_nearest of the other tree
-
 RADIUS = 50.0
 
 class Tree:
+	def __init__(self):
+		self.nodes = list()
+
 	def __init__(self,
 	             name,
 				 start_point,
@@ -23,6 +21,7 @@ class Tree:
 				 connection_color,
 				 goal_node_color,
 				 path_color,
+				 goal_tolerance,
 				 epsilon_min,
 				 epsilon_max,
 				 screen):
@@ -49,21 +48,14 @@ class Tree:
 		self.epsilon_max = epsilon_max
 		self.epsilon_min = epsilon_min
 
-		self.goal_tolerance = 20
+		self.goal_tolerance = goal_tolerance
 
-		self.x_nearest_ext = None
+		self.n_nearest_ext = None
 
 		self.goal = None
 
 		self.tree_blocked = False
 		self.path_old = list()
-
-		# TODO remove
-		self.goal_index = 0
-
-		self.goal_found = False
-
-
 
 		# Draw Tree Start Node
 		self.draw_node(start_point, radius=8)
@@ -155,7 +147,9 @@ class Tree:
 		self.draw_node(self.new_node.point)
 
 		pygame.display.update()
-		time.sleep(0.05)
+
+		# uncomment to make animation slow
+		# time.sleep(0.05)
 
 	def sample_free(self):
 		"""  Get a random point located in a free area
@@ -193,13 +187,12 @@ class Tree:
 
 	def attempt_connect(self, external_node):
 		""" ."""
-		x_nearest = self.get_nearest(external_node.point)
+		n_nearest = self.get_nearest(external_node.point)
 
-		if dist(x_nearest.point, external_node.point) < self.goal_tolerance:
+		if dist(n_nearest.point, external_node.point) < self.goal_tolerance:
 			# check collision
-			if self.obstacle_free(x_nearest, external_node):
-				self.x_nearest_ext = x_nearest
-				# print self.tree_name
+			if self.obstacle_free(n_nearest, external_node):
+				self.n_nearest_ext = n_nearest
 				return True
 		return False
 
@@ -211,10 +204,10 @@ class Tree:
 	def obstacle_free(self, n1, n2):
 		return True
 
-	def get_external_nodes(self, x_nearest_ext):
+	def get_external_nodes(self, n_nearest_ext):
 		""" ."""
 		external_nodes = list()
-		current_node = x_nearest_ext
+		current_node = n_nearest_ext
 		while current_node.parent != None:
 			external_nodes.append(current_node)
 			current_node = current_node.parent
@@ -224,15 +217,12 @@ class Tree:
 
 		return external_nodes
 
-	def get_x_nearest_external(self):
-		return self.x_nearest_ext
+	def get_n_nearest_external(self):
+		""" ."""
+		return self.n_nearest_ext
 
 	def add_nodes_to_tree(self, external_nodes, parent_node):
 		current_parent = parent_node
-
-		print "START"
-		print "external nodes size: " + str(len(external_nodes))
-		print ""
 
 		nodes_index = len(self.nodes)
 		for node in external_nodes:
@@ -244,25 +234,7 @@ class Tree:
 			# add to the nodes list
 			self.nodes.append(node)
 
-		
-		# for node in self.nodes[nodes_index:]:
-		# 	self.insert_node(node.point, node.parent)
-			# self.choose_parent(node, node.parent)
-			# self.nodes.append(node)
-			# self.rewire(node)
-
-		print ""
-		print "STOP"
-		# time.sleep(5)
-
-		# Set goal
-		self.goal_index = len(self.nodes) - 1
-		self.goal = self.nodes[self.goal_index]
-		
-
-		print "END"
-	
-		pygame.display.update()
+		self.goal = self.nodes[len(self.nodes) - 1]
 	
 	def block_tree(self):
 		""" This tree does not grow anymore."""
@@ -272,22 +244,15 @@ class Tree:
 		""" ."""
 		path = list()
 		current_node = self.goal
-		# print "Goal point: " + str(self.goal.point)
-		# print self.nodes[self.goal_index].point
+
 		while current_node.parent != None:
-			print current_node.point
 			path.insert(0, current_node.point)
 			current_node = current_node.parent
-			# time.sleep(0.05)
-		
-		print ""
 
-		# time.sleep(1)
 		# Add the start point
 		path.insert(0, current_node.point)
 		
-		# print "Nodes Amount: " + str(len(nodes))
-
+		# Draw path
 		self.draw_final_path(path)
 		return path
 
@@ -301,7 +266,7 @@ class Tree:
 		
 		self.path_old = []
 
-		# pygame.display.update()
+		pygame.display.update()
 
 		# Draw new path
 		for i in range(len(path) - 1):
@@ -322,11 +287,11 @@ class Tree:
 
 	def draw_path(self, point1, point2):
 		""" ."""
-		pygame.draw.line(self.screen, self.path_color, point1, point2, 4)
+		pygame.draw.line(self.screen, self.path_color, point1, point2, 8)
 
 	def erase_path(self, point1, point2):
 		""" ."""
-		pygame.draw.line(self.screen, WHITE, point1, point2, 4)
+		pygame.draw.line(self.screen, WHITE, point1, point2, 8)
 
 	def draw_node(self, point, radius=4, color=None):
 		""" ."""
@@ -334,3 +299,7 @@ class Tree:
 			color = self.node_color
 
 		pygame.draw.circle(self.screen, color, point, radius)
+
+	def is_tree_blocked(self):
+		""" ."""
+		return self.tree_blocked
