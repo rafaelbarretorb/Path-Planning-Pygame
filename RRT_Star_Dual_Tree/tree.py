@@ -3,13 +3,29 @@ import random
 from helper_functions import *
 from node import Node
 import pygame
-from constants import GREEN, WHITE, RED, BLACK, BLUE, YELLOW, PURPLE, DARK_GREEN
+from constants import WHITE
 import time
+
+import sys
+
+
+# POSSIBLE PROBLEMS
+
+# x_nearest of the other tree
 
 RADIUS = 50.0
 
 class Tree:
-	def __init__(self, name, start_point, vertex_color, edge_color, epsilon_min, epsilon_max, screen):
+	def __init__(self,
+	             name,
+				 start_point,
+				 node_color,
+				 connection_color,
+				 goal_node_color,
+				 path_color,
+				 epsilon_min,
+				 epsilon_max,
+				 screen):
 		""" ."""
 		self.tree_name = name
 		self.nodes = list()
@@ -17,28 +33,21 @@ class Tree:
 
 		self.screen = screen
 
-		self.start_point = start_point
-
 		self.k = 20.0
 		self.radius = 100.0
 
-		self.v_color = vertex_color
-		self.e_color = edge_color
+		self.node_color = node_color
+		self.connection_color = connection_color
+		self.goal_node_color = goal_node_color
+		self.path_color = path_color
 
-		self.nodes.append(Node(self.start_point, None))
+		self.nodes.append(Node(start_point, None))
 
 		self.max_num_nodes = 5000
 		self.min_num_nodes = 200
 
 		self.epsilon_max = epsilon_max
 		self.epsilon_min = epsilon_min
-
-		# START SQUARE
-		width = 20
-		height = width
-		left = self.start_point[0] - width/2
-		top = self.start_point[1] - height/2
-		self.start_square = pygame.Rect(left, top, width, height)
 
 		self.goal_tolerance = 20
 
@@ -49,31 +58,33 @@ class Tree:
 		self.tree_blocked = False
 		self.path_old = list()
 
+		# TODO remove
+		self.goal_index = 0
+
+		self.goal_found = False
+
+
+
+		# Draw Tree Start Node
+		self.draw_node(start_point, radius=8)
+
 	def get_nodes_length(self):
 		""" ."""
 		return len(self.nodes)
 
-	# def choose_parent(self, new_node, parent):
-	# 	""" ."""
-	# 	self.update_radius()
-
-	# 	for node in self.nodes:
-	# 		if dist(node.point, new_node.point) < RADIUS:
-	# 			node_cost = node.cost + dist(node.point, new_node.point)
-	# 			parent_cost = parent.cost + dist(parent.point, new_node.point)
-	# 			if node_cost < parent_cost:
-	# 				parent = node
-
-	# 	new_node.cost = parent.cost + dist(parent.point, new_node.point)
-	# 	new_node.parent = parent
-
-	# 	return new_node
-
 	def choose_parent(self, new_node, parent):
 		""" ."""
 		for node in self.nodes:
-			if dist(node.point, new_node.point) < RADIUS and \
-				node.cost + dist(node.point, new_node.point) < parent.cost + dist(parent.point, new_node.point):
+			# distance node to new_node
+			d = dist(node.point, new_node.point)
+
+			# connection cost node to new_node
+			cost_n_2_new_n = node.cost + dist(node.point, new_node.point)
+
+			# connection cost node to parent
+			cost_p_2_new_n = parent.cost + dist(parent.point, new_node.point)
+
+			if d < RADIUS and cost_n_2_new_n < cost_p_2_new_n:
 				parent = node
 
 		new_node.cost = parent.cost + dist(parent.point, new_node.point)
@@ -83,26 +94,32 @@ class Tree:
 	def rewire(self, new_node):
 		""" ."""
 		for node in self.nodes:
-			self.draw_vertex(node.point)
+			# Draw node node TODO ???
+			self.draw_node(node.point)
 
-			if node != new_node.parent and dist(node.point, new_node.point) < RADIUS and \
-				new_node.cost + dist(node.point, new_node.point) < node.cost:
+			# new_node parent
+			new_n_p = new_node.parent
+
+			# distance node to new_node
+			d = dist(node.point, new_node.point)
+
+			# connection cost node to new_node
+			cost_new_n_2_n = new_node.cost + dist(node.point, new_node.point)
+
+			if node != new_n_p and d < RADIUS and cost_new_n_2_n < node.cost:
 				# Delete, paint white
-				pygame.draw.line(self.screen, WHITE, node.point, node.parent.point, 2) 
-				# self.draw_edge(node.point, self.new_node.point, WHITE)
-				# self.erase_edge(node.point, self.new_node.point)
+				self.erase_connection(node.point, node.parent.point)
 
 				# Now the node parent is the new node
 				node.parent = new_node
 				node.cost = new_node.cost + dist(node.point, new_node.point)
+				
 				# Draw
-				# pygame.draw.line(self.screen, sel, node.point, self.new_node.point, 2)
-				self.draw_edge(node.point, new_node.point)
+				self.draw_connection(node.point, new_node.point)
 					
 			else:
 				if node.parent != None:
-					# pygame.draw.line(self.screen, BLUE, node.point, node.parent.point, 2)
-					self.draw_edge(node.point, node.parent.point)
+					self.draw_connection(node.point, node.parent.point)
 
 		pygame.display.update()
 
@@ -115,28 +132,30 @@ class Tree:
 		else:
 			found_next = False
 			while found_next == False:
-				x_rand = self.sample_free()
-				x_nearest = self.get_nearest(x_rand)
-				x_new = self.steer(x_nearest.point, x_rand)
-				if self.obstacle_free(x_nearest, x_new):
-					parent_node = x_nearest
-					new_node = Node(x_new, parent_node)
-					new_node = self.choose_parent(new_node, parent_node)
-					self.nodes.append(new_node)
-					self.rewire(new_node)            
+				p_rand = self.sample_free()
+				n_nearest = self.get_nearest(p_rand)
+				n_new = self.steer(n_nearest.point, p_rand)
+				if self.obstacle_free(n_nearest, n_new):
 					found_next = True
-					self.new_node = self.nodes[-1]
+					self.insert_node(n_new, n_nearest)
+	
+	def insert_node(self, x_new, x_nearest):
+		""" ."""
+		parent_node = x_nearest
+		new_node = Node(x_new, parent_node)
+		new_node = self.choose_parent(new_node, parent_node)
+		self.nodes.append(new_node)
+		self.rewire(new_node)            
+		self.new_node = self.nodes[-1]
 
-					# print "new node: " + str(self.new_node.point)
+		# Draw the new connection
+		self.draw_connection(self.new_node.point, self.new_node.parent.point)
 
-					# Draw the new edge
-					self.draw_edge(self.new_node.point, parent_node.point)
+		# Draw new node
+		self.draw_node(self.new_node.point)
 
-					# Draw new vertex
-					self.draw_vertex(self.new_node.point)
-
-					pygame.display.update()
-					time.sleep(0.01)
+		pygame.display.update()
+		time.sleep(0.05)
 
 	def sample_free(self):
 		"""  Get a random point located in a free area
@@ -169,8 +188,8 @@ class Tree:
 
 	def get_new_node(self):
 		""" ."""
-		node = Node(self.new_node.point, self.new_node.parent) 
-		return node
+		# TODO woring hete
+		return self.new_node
 
 	def attempt_connect(self, external_node):
 		""" ."""
@@ -188,21 +207,6 @@ class Tree:
 		# TODO node list has not shape
 		nodes_size = len(self.nodes) + 1
 		self.radius = self.k*math.sqrt((math.log(nodes_size) / nodes_size))
-
-	def draw_edge(self, point1, point2, width=2):
-		pygame.draw.line(self.screen, self.e_color, point1, point2, width)
-
-	def erase_edge(self, point1, point2):
-		pygame.draw.line(self.screen, WHITE, point1, point2, 2)
-
-	def draw_path(self, point1, point2):
-		pygame.draw.line(self.screen, BLACK, point1, point2, 4)
-
-	def erase_path(self, point1, point2):
-		pygame.draw.line(self.screen, WHITE, point1, point2, 4)
-
-	def draw_vertex(self, point):
-		pygame.draw.circle(self.screen, self.v_color, point, 4)
 
 	def obstacle_free(self, n1, n2):
 		return True
@@ -225,22 +229,40 @@ class Tree:
 
 	def add_nodes_to_tree(self, external_nodes, parent_node):
 		current_parent = parent_node
-		self.draw_edge(external_nodes[0].point, parent_node.point, 4)
+
+		print "START"
+		print "external nodes size: " + str(len(external_nodes))
+		print ""
+
+		nodes_index = len(self.nodes)
 		for node in external_nodes:
 			node.parent = current_parent
 			node.cost = current_parent.cost + dist(node.point, current_parent.point)
-			# print node.cost
+			
 			current_parent = node
 
 			# add to the nodes list
 			self.nodes.append(node)
 
-		self.goal = self.nodes[len(self.nodes)-1]
-		pygame.display.update()
+		
+		# for node in self.nodes[nodes_index:]:
+		# 	self.insert_node(node.point, node.parent)
+			# self.choose_parent(node, node.parent)
+			# self.nodes.append(node)
+			# self.rewire(node)
 
-	# def get_goal_node(self):
-	# 	""" First node of other tree."""
-	# 	return self.goal
+		print ""
+		print "STOP"
+		# time.sleep(5)
+
+		# Set goal
+		self.goal_index = len(self.nodes) - 1
+		self.goal = self.nodes[self.goal_index]
+		
+
+		print "END"
+	
+		pygame.display.update()
 	
 	def block_tree(self):
 		""" This tree does not grow anymore."""
@@ -250,10 +272,17 @@ class Tree:
 		""" ."""
 		path = list()
 		current_node = self.goal
+		# print "Goal point: " + str(self.goal.point)
+		# print self.nodes[self.goal_index].point
 		while current_node.parent != None:
+			print current_node.point
 			path.insert(0, current_node.point)
 			current_node = current_node.parent
+			# time.sleep(0.05)
+		
+		print ""
 
+		# time.sleep(1)
 		# Add the start point
 		path.insert(0, current_node.point)
 		
@@ -264,17 +293,44 @@ class Tree:
 
 	def draw_final_path(self, path):
 		""" ."""
-		# Draw old path with WHITE
+		# ERASE old path
 		for i in range(len(self.path_old) - 1):
 			self.erase_path(self.path_old[i], self.path_old[i + 1])
 		
+		pygame.display.update()
+		
 		self.path_old = []
 
-		pygame.display.update()
-		# Draw current path with RED
+		# pygame.display.update()
+
+		# Draw new path
 		for i in range(len(path) - 1):
 			self.draw_path(path[i], path[i + 1])
 		
+		# Draw Goal Node of the Tree
+		self.draw_node(self.goal.point, radius=8, color=self.goal_node_color)
+		
 		pygame.display.update()
 		
+	def draw_connection(self, point1, point2, width=2):
+		""" ."""
+		pygame.draw.line(self.screen, self.connection_color, point1, point2, width)
 
+	def erase_connection(self, point1, point2):
+		""" ."""
+		pygame.draw.line(self.screen, WHITE, point1, point2, 2)
+
+	def draw_path(self, point1, point2):
+		""" ."""
+		pygame.draw.line(self.screen, self.path_color, point1, point2, 4)
+
+	def erase_path(self, point1, point2):
+		""" ."""
+		pygame.draw.line(self.screen, WHITE, point1, point2, 4)
+
+	def draw_node(self, point, radius=4, color=None):
+		""" ."""
+		if color is None:
+			color = self.node_color
+
+		pygame.draw.circle(self.screen, color, point, radius)

@@ -19,7 +19,7 @@ def main():
     pygame.display.set_caption('RRT* Path Planning')
     screen.fill(WHITE)
 
-    start_point = [200, 200]
+    start_point = [50, 50]
     goal_point = [400, 400]
     goal_tolerance = 20
     rrt_star = RRT_Star(start_point, goal_point, MAX_NUM_NODES, MIN_NUM_NODES, goal_tolerance, 0, 30, screen)

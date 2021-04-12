@@ -43,8 +43,26 @@ class RRT_Star:
 
         self.goal_tolerance = goal_tolerance
 
-        self.start_tree = Tree('start', start_point, vertex_color=GREEN, edge_color=GREEN, epsilon_min=epsilon_min, epsilon_max=epsilon_max, screen=screen)
-        self.goal_tree = Tree('goal', goal_point, vertex_color=RED, edge_color=RED, epsilon_min=epsilon_min, epsilon_max=epsilon_max, screen=screen)
+        self.start_tree = Tree('start',
+                               start_point,
+                               node_color=GREEN,
+                               connection_color=GREEN,
+                               goal_node_color=RED,
+                               path_color=BLACK,
+                               epsilon_min=epsilon_min,
+                               epsilon_max=epsilon_max,
+                               screen=screen)
+
+        self.goal_tree = Tree('goal',
+                              goal_point,
+                              node_color=RED,
+                              connection_color=RED,
+                              goal_node_color=GREEN,
+                              path_color=BLACK,
+                              epsilon_min=epsilon_min,
+                              epsilon_max=epsilon_max,
+                              screen=screen)
+
         self.tree = None
         # self.path = list()
         self.path_old = list()
@@ -113,6 +131,10 @@ class RRT_Star:
                 # Goal Tree grows
                 self.goal_tree.grow_tree()
 
+                # Test EXIT
+                # print "EXIT"
+                # sys.exit()
+
                 # Goal Tree new node
                 gt_new_node = self.goal_tree.get_new_node()
                 # print "new node: " + str(gt_new_node.point)
@@ -139,9 +161,8 @@ class RRT_Star:
 
             if self.goal_found:
                 path = self.tree.compute_path()
-                # if self.tree.get_nodes_length() > self.min_num_nodes:
-                #     print "TEST"
-                #     return path
+                if self.tree.get_nodes_length() > self.min_num_nodes:
+                    return path
         
         return [], []
     
