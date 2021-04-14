@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 
-from constants import GREEN, RED, BLACK, BLUE
-from tree import Tree
-
 import pygame
+import sys
+
+from constants import GREEN, RED, BLACK, WHITE
+from tree import Tree
 
 
 class RRTStarDualTree:
-    """ Class for RRT* Path Planning. """
+    """ Class for RRT* Dual Tree Path Planning. """
     def __init__(self, start_point, goal_point,
                  max_num_nodes, min_num_nodes,
                  goal_tolerance, epsilon_min, epsilon_max, screen):
@@ -26,7 +27,7 @@ class RRTStarDualTree:
                                start_point,
                                node_color=GREEN,
                                connection_color=GREEN,
-                               goal_node_color=BLUE,
+                               goal_node_color=BLACK,
                                path_color=RED,
                                goal_tolerance=20,
                                epsilon_min=epsilon_min,
@@ -36,10 +37,10 @@ class RRTStarDualTree:
 
         self.goal_tree = Tree('goal',
                               goal_point,
-                              node_color=BLUE,
-                              connection_color=BLUE,
+                              node_color=RED,
+                              connection_color=RED,
                               goal_node_color=GREEN,
-                              path_color=RED,
+                              path_color=BLACK,
                               goal_tolerance=20,
                               epsilon_min=epsilon_min,
                               epsilon_max=epsilon_max,
@@ -106,3 +107,42 @@ class RRTStarDualTree:
                 return False
             else:
                 return True
+
+
+
+
+
+XDIM = 500
+YDIM = 500
+WINSIZE = [XDIM, YDIM]
+EPSILON = 7.0
+MAX_NUM_NODES = 5000
+MIN_NUM_NODES = 2000
+
+def main():
+    pygame.init()
+    screen = pygame.display.set_mode(WINSIZE)
+    pygame.display.set_caption('RRT* Path Planning')
+    screen.fill(WHITE)
+
+    start_point = [50, 50]
+    goal_point = [400, 400]
+    goal_tolerance = 20
+    rrt_star = RRTStarDualTree(start_point, goal_point, MAX_NUM_NODES, MIN_NUM_NODES, goal_tolerance, 0, 30, screen)
+
+    path = rrt_star.planning()
+    pause = True
+    # for e in pygame.event.get():
+    #     if e.type == QUIT or (e.type == KEYUP and e.key == K_ESCAPE):
+    #         sys.exit("Leaving because you requested it.")
+    # pygame.display.update()
+
+    while pause:
+        for event in pygame.event.get():
+
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+
+if __name__ == '__main__':
+    main()

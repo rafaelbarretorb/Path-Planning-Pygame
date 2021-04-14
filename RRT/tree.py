@@ -307,3 +307,11 @@ class Tree:
 	def is_tree_blocked(self):
 		""" Returns true if this tree is blocked, false otherwise."""
 		return self.tree_blocked
+
+	def set_goal(self, goal_node):
+		""" Set goal node. Necessary for RRT* that has just one Tree growing."""
+		self.goal = goal_node
+
+	def get_goal(self):
+		""" Get goal node."""
+		return self.goal
