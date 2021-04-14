@@ -98,14 +98,15 @@ class RRTStar:
 
 XDIM = 500
 YDIM = 500
-WINSIZE = [XDIM, YDIM]
+WINSIZE = (XDIM, YDIM)
 EPSILON = 7.0
-MAX_NUM_NODES = 1500
-MIN_NUM_NODES = 500
+MAX_NUM_NODES = 1000
+MIN_NUM_NODES = 200
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode(WINSIZE)
+    # set_mode(size=(0, 0), flags=0, depth=0, display=0, vsync=0)
+    screen = pygame.display.set_mode(WINSIZE, pygame.RESIZABLE, 32)
     pygame.display.set_caption('RRT* Path Planning')
     screen.fill(WHITE)
 

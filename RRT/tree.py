@@ -268,9 +268,7 @@ class Tree:
 		
 		pygame.display.update()
 		
-		self.path_old = []
-
-		pygame.display.update()
+		self.path_old = path[:]
 
 		# Draw new path
 		for i in range(len(path) - 1):
@@ -291,18 +289,18 @@ class Tree:
 
 	def draw_path(self, point1, point2):
 		""" Draw a path line between two nodes with a larger width."""
-		pygame.draw.line(self.screen, self.path_color, point1, point2, 4)
+		pygame.draw.line(self.screen, self.path_color, point1, point2, 6)
 
 	def erase_path(self, point1, point2):
 		""" Erase the path line between two nodes."""
-		pygame.draw.line(self.screen, WHITE, point1, point2, 4)
+		pygame.draw.line(self.screen, WHITE, point1, point2, 6)
 
 	def draw_node(self, point, radius=4, color=None):
 		""" Draw a circle representing a node."""
 		if color is None:
 			color = self.node_color
 
-		pygame.draw.circle(self.screen, color, point, radius)
+		pygame.draw.circle(self.screen, color, (point[0], point[1]), radius)
 
 	def is_tree_blocked(self):
 		""" Returns true if this tree is blocked, false otherwise."""
