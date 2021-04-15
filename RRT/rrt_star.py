@@ -73,6 +73,7 @@ class RRTStar:
             else:
                 path = self.tree.compute_path()
             
+            # TODO Remove
             if len(self.nodes) > self.min_num_nodes:
                 return path
         

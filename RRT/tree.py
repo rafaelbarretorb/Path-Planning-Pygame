@@ -134,6 +134,8 @@ class Tree:
 		new_node = Node(n_new, parent_node)
 		new_node = self.choose_parent(new_node, parent_node)
 		self.nodes.append(new_node)
+
+		self.nodes[-1].id = len(self.nodes) - 1
 		self.rewire(new_node)            
 		self.new_node = self.nodes[-1]
 
@@ -226,7 +228,6 @@ class Tree:
 		""" Add a set of external nodes to this tree."""
 		current_parent = parent_node
 
-		nodes_index = len(self.nodes)
 		for node in external_nodes:
 			node.parent = current_parent
 			node.cost = current_parent.cost + dist(node.point, current_parent.point)
@@ -313,3 +314,31 @@ class Tree:
 	def get_goal(self):
 		""" Get goal node."""
 		return self.goal
+
+	def path_otimization(self):
+		""" Path Optimization.
+		    Only RRT*-Smart algorithm """
+
+		new_path = list()
+		i = 0
+		current_node = self.goal
+		while current_node.parent.parent != None:
+			while self.obstacle_free(current_node, current_node.parent.parent):
+
+				if current_node.parent.parent == None:
+					break
+
+				# Update parent node
+				current_node.parent = current_node.parent.parent
+				self.nodes[current_node.id].parent = current_node.parent
+
+				# Update current node cost
+				parent_cost = current_node.parent.cost
+				dist_cost = dist(current_node.parent.point, current_node.point)
+				self.nodes[current_node.id].cost = parent_cost + dist_cost
+			
+			if current_node.parent.parent == None:
+				break
+			current_node = current_node.parent
+	
+		return self.compute_path()
