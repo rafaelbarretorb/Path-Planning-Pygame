@@ -24,13 +24,15 @@ class Tree:
 				 epsilon_min,
 				 epsilon_max,
 				 max_num_nodes,
-				 screen):
+				 screen,
+				 obstacles):
 		""" ."""
 		self.tree_name = name
 		self.nodes = list()
 		self.new_node = None
 
 		self.screen = screen
+		self.obstacle = obstacles
 
 		self.k = 20.0
 		self.radius = 100.0
@@ -201,6 +203,7 @@ class Tree:
 
 	def obstacle_free(self, n1, n2):
 		""" Check if there is an obstacle between nodes n1 and n2."""
+		if not self.obstacle.check_collision()
 		return True
 
 	# TODO improve name of this method

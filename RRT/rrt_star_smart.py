@@ -8,6 +8,8 @@ from tree import Tree
 from helper_functions import dist
 from node import Node
 
+from obstacles import Obstacles
+
 RADIUS = 50.0
 
 
@@ -16,8 +18,10 @@ class RRTStarSmart:
 	def __init__(self,
 				 start_point, goal_point,
 				 max_num_nodes, min_num_nodes,
-				 goal_tolerance, epsilon_min, epsilon_max, screen):
+				 goal_tolerance, epsilon_min, epsilon_max, screen,
+				 obstacles):
 		self.screen = screen
+		self.obstacles = obstacles
 		self.nodes = list()
 		self.start_point = start_point
 		self.goal_point = goal_point
@@ -109,31 +113,37 @@ MAX_NUM_NODES = 1000
 MIN_NUM_NODES = 200
 
 def main():
-    pygame.init()
-    # set_mode(size=(0, 0), flags=0, depth=0, display=0, vsync=0)
-    screen = pygame.display.set_mode(WINSIZE, pygame.RESIZABLE, 32)
-    pygame.display.set_caption('RRT* Path Planning')
-    screen.fill(WHITE)
+	pygame.init()
+	# set_mode(size=(0, 0), flags=0, depth=0, display=0, vsync=0)
+	screen = pygame.display.set_mode(WINSIZE, pygame.RESIZABLE, 32)
+	pygame.display.set_caption('RRT* Path Planning')
+	screen.fill(WHITE)
 
-    start_point = [200, 200]
-    goal_point = [400, 400]
-    goal_tolerance = 20
-    rrt_star = RRTStarSmart(start_point,goal_point, MAX_NUM_NODES, MIN_NUM_NODES,
-               goal_tolerance, 0, 30, screen)
+	# Obstacles
+	obs = Obstacles(screen, BLACK)
+	obs.make_circle(150, 150, 50)
+	obs.make_rect(250, 100, 50, 300)
+	obs.draw()
 
-    path = rrt_star.planning()
-    pause = True
+	start_point = [50, 50]
+	goal_point = [450, 450]
+	goal_tolerance = 20
+	rrt_star_smart = RRTStarSmart(start_point,goal_point, MAX_NUM_NODES, MIN_NUM_NODES,
+				goal_tolerance, 0, 30, screen, obs)
+
+    # path = rrt_star_smart.planning()
+	pause = True
     # for e in pygame.event.get():
     #     if e.type == QUIT or (e.type == KEYUP and e.key == K_ESCAPE):
     #         sys.exit("Leaving because you requested it.")
     # pygame.display.update()
 
-    while pause:
-        for event in pygame.event.get():
+	while pause:
+		for event in pygame.event.get():
 
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
+			if event.type == pygame.QUIT:
+				pygame.quit()
+				quit()
 
 
 if __name__ == '__main__':
