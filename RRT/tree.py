@@ -25,14 +25,15 @@ class Tree:
 				 epsilon_max,
 				 max_num_nodes,
 				 screen,
-				 obstacles):
+				 obstacles, obs_resolution):
 		""" ."""
 		self.tree_name = name
 		self.nodes = list()
 		self.new_node = None
 
 		self.screen = screen
-		self.obstacle = obstacles
+		self.obstacles = obstacles
+		self.obs_resolution = obs_resolution
 
 		self.k = 20.0
 		self.radius = 100.0
@@ -81,7 +82,8 @@ class Tree:
 			cost_p_2_new_n = parent.cost + dist(parent.point, new_node.point)
 
 			if d < RADIUS and cost_n_2_new_n < cost_p_2_new_n:
-				parent = node
+				if self.obstacle_free(node.point, new_node.point):
+					parent = node
 
 		new_node.cost = parent.cost + dist(parent.point, new_node.point)
 		new_node.parent = parent
@@ -103,15 +105,16 @@ class Tree:
 			cost_new_n_2_n = new_node.cost + dist(node.point, new_node.point)
 
 			if node != new_n_p and d < RADIUS and cost_new_n_2_n < node.cost:
-				# Delete, paint white
-				self.erase_connection(node.point, node.parent.point)
+				if self.obstacle_free(node.point, new_node.point):
+					# Delete, paint white
+					self.erase_connection(node.point, node.parent.point)
 
-				# Now the node parent is the new node
-				node.parent = new_node
-				node.cost = new_node.cost + dist(node.point, new_node.point)
-				
-				# Draw
-				self.draw_connection(node.point, new_node.point)
+					# Now the node parent is the new node
+					node.parent = new_node
+					node.cost = new_node.cost + dist(node.point, new_node.point)
+					
+					# Draw
+					self.draw_connection(node.point, new_node.point)
 					
 			else:
 				if node.parent != None:
@@ -125,15 +128,15 @@ class Tree:
 		while found_next == False:
 			p_rand = self.sample_free()
 			n_nearest = self.get_nearest(p_rand)
-			n_new = self.steer(n_nearest.point, p_rand)
-			if self.obstacle_free(n_nearest, n_new):
+			p_new = self.steer(n_nearest.point, p_rand)
+			if self.obstacle_free(n_nearest.point, p_new):
 				found_next = True
-				self.insert_node(n_new, n_nearest)
+				self.insert_node(p_new, n_nearest)
 	
-	def insert_node(self, n_new, n_nearest):
+	def insert_node(self, p_new, n_nearest):
 		""" ."""
 		parent_node = n_nearest
-		new_node = Node(n_new, parent_node)
+		new_node = Node(p_new, parent_node)
 		new_node = self.choose_parent(new_node, parent_node)
 		self.nodes.append(new_node)
 
@@ -191,7 +194,7 @@ class Tree:
 
 		if dist(n_nearest.point, external_node.point) < self.goal_tolerance:
 			# check collision
-			if self.obstacle_free(n_nearest, external_node):
+			if self.obstacle_free(n_nearest.point, external_node.point):
 				self.n_nearest_ext = n_nearest
 				return True
 		return False
@@ -200,11 +203,6 @@ class Tree:
 		""" Update the radius of the algorithm optimization area."""
 		nodes_size = len(self.nodes) + 1
 		self.radius = self.k*math.sqrt((math.log(nodes_size) / nodes_size))
-
-	def obstacle_free(self, n1, n2):
-		""" Check if there is an obstacle between nodes n1 and n2."""
-		if not self.obstacle.check_collision()
-		return True
 
 	# TODO improve name of this method
 	def get_external_nodes(self, n_nearest_ext):
@@ -326,10 +324,11 @@ class Tree:
 		i = 0
 		current_node = self.goal
 		while current_node.parent.parent != None:
-			while self.obstacle_free(current_node, current_node.parent.parent):
+			# while self.obstacle_free(current_node, current_node.parent.parent):
+			if self.obstacle_free(current_node.point, current_node.parent.parent.point):
 
-				if current_node.parent.parent == None:
-					break
+				# if current_node.parent.parent == None:
+				# 	break
 
 				# Update parent node
 				current_node.parent = current_node.parent.parent
@@ -345,3 +344,30 @@ class Tree:
 			current_node = current_node.parent
 	
 		return self.compute_path()
+
+	def collision(self, p):
+		""" Check if the point p is located inside some obstacle."""
+		return self.obstacles.check_collision(p[0], p[1])
+
+	def step_n_from_p1_to_p2(self, p1, p2, n):
+		""" ."""
+		theta = math.atan2(p2[1]-p1[1], p2[0]-p1[0])
+		return (p1[0] + n*self.obs_resolution*math.cos(theta),
+				p1[1] + n*self.obs_resolution*math.sin(theta))
+	
+	def obstacle_free(self, p1, p2):
+		""" Check if there is an obstacle between points p1 and p2."""
+		distance = dist(p1, p2)
+		n = 1
+		if distance < self.obs_resolution:
+			if self.collision(p2):
+				return False
+			else:
+				return True
+		else:
+			for i in range(int(math.floor(distance/self.obs_resolution))):
+				p_i = self.step_n_from_p1_to_p2(p1, p2, i + 1)
+				if self.collision(p_i):
+					return False
+
+			return True

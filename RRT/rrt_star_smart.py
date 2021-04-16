@@ -19,9 +19,10 @@ class RRTStarSmart:
 				 start_point, goal_point,
 				 max_num_nodes, min_num_nodes,
 				 goal_tolerance, epsilon_min, epsilon_max, screen,
-				 obstacles):
+				 obstacles, obs_resolution):
 		self.screen = screen
 		self.obstacles = obstacles
+		self.obs_resolution = obs_resolution
 		self.nodes = list()
 		self.start_point = start_point
 		self.goal_point = goal_point
@@ -44,7 +45,8 @@ class RRTStarSmart:
 						 epsilon_min=epsilon_min,
 						 epsilon_max=epsilon_max,
 						 max_num_nodes=max_num_nodes,
-						 screen=self.screen)
+						 screen=self.screen,
+						 obstacles=self.obstacles, obs_resolution=self.obs_resolution)
 
 		self.tree.set_goal(Node(goal_point, None))
 		self.goal_node = self.tree.get_goal()
@@ -128,10 +130,13 @@ def main():
 	start_point = [50, 50]
 	goal_point = [450, 450]
 	goal_tolerance = 20
-	rrt_star_smart = RRTStarSmart(start_point,goal_point, MAX_NUM_NODES, MIN_NUM_NODES,
-				goal_tolerance, 0, 30, screen, obs)
+	obs_resolution = 5
+	rrt_star_smart = RRTStarSmart(start_point, goal_point,
+	                              MAX_NUM_NODES, MIN_NUM_NODES,
+				                        goal_tolerance, 0, 30, screen,
+																obs, obs_resolution)
 
-    # path = rrt_star_smart.planning()
+	path = rrt_star_smart.planning()
 	pause = True
     # for e in pygame.event.get():
     #     if e.type == QUIT or (e.type == KEYUP and e.key == K_ESCAPE):
