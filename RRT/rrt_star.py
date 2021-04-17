@@ -8,6 +8,8 @@ from tree import Tree
 from helper_functions import dist
 from node import Node
 
+from obstacles import Obstacles
+
 RADIUS = 50.0
 
 
@@ -16,9 +18,12 @@ class RRTStar:
     def __init__(self,
                  start_point, goal_point,
                  max_num_nodes, min_num_nodes,
-                 goal_tolerance, epsilon_min, epsilon_max, screen):
-
+                 goal_tolerance, epsilon_min, epsilon_max, screen,
+                 obstacles, obs_resolution):
         self.screen = screen
+        self.obstacles = obstacles
+        self.obs_resolution = obs_resolution
+
         self.nodes = list()
         self.start_point = start_point
         self.goal_point = goal_point
@@ -33,16 +38,18 @@ class RRTStar:
         self.goal_found = False
 
         self.tree = Tree('tree',
-                               start_point,
-                               node_color=GREEN,
-                               connection_color=GREEN,
-                               goal_node_color=BLACK,
-                               path_color=RED,
-                               goal_tolerance=20,
-                               epsilon_min=epsilon_min,
-                               epsilon_max=epsilon_max,
-                               max_num_nodes=5000,
-                               screen=self.screen)
+                         start_point,
+                         node_color=GREEN,
+                         connection_color=GREEN,
+                         goal_node_color=BLACK,
+                         path_color=RED,
+                         goal_tolerance=20,
+                         epsilon_min=epsilon_min,
+                         epsilon_max=epsilon_max,
+                         max_num_nodes=5000,
+                         screen=self.screen,
+                         obstacles=self.obstacles,
+                         obs_resolution=self.obs_resolution)
 
         self.tree.set_goal(Node(goal_point, None))
         self.goal_node = self.tree.get_goal()
@@ -111,10 +118,20 @@ def main():
     pygame.display.set_caption('RRT* Path Planning')
     screen.fill(WHITE)
 
-    start_point = [200, 200]
+    # Obstacles
+    obs = Obstacles(screen, BLACK)
+    obs.make_circle(150, 150, 50)
+    obs.make_rect(250, 100, 50, 300)
+    obs.draw()
+
+    obs_resolution = 5
+
+    start_point = [50, 50]
     goal_point = [400, 400]
     goal_tolerance = 20
-    rrt_star = RRTStar(start_point, goal_point, MAX_NUM_NODES, MIN_NUM_NODES, goal_tolerance, 0, 30, screen)
+    rrt_star = RRTStar(start_point, goal_point, MAX_NUM_NODES, MIN_NUM_NODES,
+                       goal_tolerance, 0, 30, screen,
+                       obs, obs_resolution)
 
     path = rrt_star.planning()
     pause = True

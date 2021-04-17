@@ -35,7 +35,7 @@ class RRTStarSmart:
 		self.goal_tolerance = goal_tolerance
 		self.goal_found = False
 
-		self.tree = Tree('tree',
+		self.tree = Tree(True,
 						 start_point,
 						 node_color=GREEN,
 						 connection_color=GREEN,
@@ -118,7 +118,7 @@ def main():
 	pygame.init()
 	# set_mode(size=(0, 0), flags=0, depth=0, display=0, vsync=0)
 	screen = pygame.display.set_mode(WINSIZE, pygame.RESIZABLE, 32)
-	pygame.display.set_caption('RRT* Path Planning')
+	pygame.display.set_caption('RRT*-Smart Path Planning')
 	screen.fill(WHITE)
 
 	# Obstacles

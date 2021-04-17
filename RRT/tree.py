@@ -14,7 +14,7 @@ RADIUS = 50.0
 
 class Tree:
 	def __init__(self,
-	             name,
+	             is_start_tree,
 				 start_point,
 				 node_color,
 				 connection_color,
@@ -27,7 +27,7 @@ class Tree:
 				 screen,
 				 obstacles, obs_resolution):
 		""" ."""
-		self.tree_name = name
+		self.is_start_tree = is_start_tree
 		self.nodes = list()
 		self.new_node = None
 
@@ -256,9 +256,12 @@ class Tree:
 
 		# Add the start point
 		path.insert(0, current_node.point)
-		
-		# Draw path
+
 		self.draw_current_path(path)
+
+		if not self.is_start_tree_the_last():
+			path.reverse()
+		
 		return path
 
 	def draw_current_path(self, path):
@@ -371,3 +374,7 @@ class Tree:
 					return False
 
 			return True
+
+	def is_start_tree_the_last(self):
+		""" ."""
+		return self.is_start_tree
