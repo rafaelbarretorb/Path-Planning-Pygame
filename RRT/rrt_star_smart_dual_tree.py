@@ -3,7 +3,7 @@
 import pygame
 import sys
 
-from constants import GREEN, RED, BLACK, WHITE
+from constants import GREEN, RED, BLACK, WHITE, GRAY
 from tree import Tree
 
 from obstacles import Obstacles
@@ -134,7 +134,7 @@ YDIM = 500
 WINSIZE = [XDIM, YDIM]
 EPSILON = 7.0
 MAX_NUM_NODES = 7000
-MIN_NUM_NODES = 1000
+MIN_NUM_NODES = 3000
 
 def main():
 	pygame.init()
@@ -143,7 +143,7 @@ def main():
 	screen.fill(WHITE)
 
 	# Obstacles
-	obs = Obstacles(screen, BLACK)
+	obs = Obstacles(screen, GRAY)
 	obs.make_circle(150, 150, 50)
 	obs.make_rect(250, 100, 50, 300)
 	obs.draw()

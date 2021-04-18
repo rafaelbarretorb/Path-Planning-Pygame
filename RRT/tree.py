@@ -132,6 +132,7 @@ class Tree:
 			if self.obstacle_free(n_nearest.point, p_new):
 				found_next = True
 				self.insert_node(p_new, n_nearest)
+				# time.sleep(0.01)
 	
 	def insert_node(self, p_new, n_nearest):
 		""" ."""

@@ -64,6 +64,8 @@ class RRTStarSmart:
 		j = 1
 		n = self.max_num_nodes
 		while self.keep_searching():
+			self.constant_draw()
+			pygame.display.update()
 			if i == (n + j*b):
 				path = self.tree.path_otimization()
 				j = j + 1
@@ -111,8 +113,8 @@ XDIM = 500
 YDIM = 500
 WINSIZE = (XDIM, YDIM)
 EPSILON = 7.0
-MAX_NUM_NODES = 1000
-MIN_NUM_NODES = 200
+MAX_NUM_NODES = 2000
+MIN_NUM_NODES = 1000
 
 def main():
 	pygame.init()
