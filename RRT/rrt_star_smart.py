@@ -46,11 +46,12 @@ class RRTStarSmart:
 						 epsilon_max=epsilon_max,
 						 max_num_nodes=max_num_nodes,
 						 screen=self.screen,
-						 obstacles=self.obstacles, obs_resolution=self.obs_resolution)
+						 obstacles=self.obstacles, obs_resolution=self.obs_resolution,
+						 biasing_radius=20.0)
 
 		self.tree.set_goal(Node(goal_point, None))
 		self.goal_node = self.tree.get_goal()
-		self.n = 0
+		self.n = None
 
 	def constant_draw(self):
 		""" . """
@@ -62,12 +63,14 @@ class RRTStarSmart:
 		i = 0
 		b = 100
 		j = 1
-		n = self.max_num_nodes
 		while self.keep_searching():
 			self.constant_draw()
 			pygame.display.update()
-			if i == (n + j*b):
-				path = self.tree.path_otimization()
+
+			# Intelligent Sampling
+			if self.n != None and i == (self.n + j*b):
+				
+				self.tree.grow_tree(random_sample=False)
 				j = j + 1
 			else:
 				# Tree grows
@@ -78,18 +81,16 @@ class RRTStarSmart:
 				if not self.goal_found:
 					if self.is_goal_reached(new_node, self.goal_node):
 						self.goal_found = True
-						n = i
-
-						print "b: " + str(b)
+						self.n = i
 
 						# new node is the final goal
 						self.goal_node = self.tree.set_goal(new_node)
 						path = self.tree.compute_path()
 				else:
-					path = self.tree.compute_path()
+					path = self.tree.path_otimization()
 
 			i = i + 1
-		return [], []
+		return []
 
 	def keep_searching(self):
 		""" ."""
@@ -113,8 +114,8 @@ XDIM = 500
 YDIM = 500
 WINSIZE = (XDIM, YDIM)
 EPSILON = 7.0
-MAX_NUM_NODES = 2000
-MIN_NUM_NODES = 1000
+MAX_NUM_NODES = 3000
+MIN_NUM_NODES = 1500
 
 def main():
 	pygame.init()
@@ -129,8 +130,8 @@ def main():
 	obs.make_rect(250, 100, 50, 300)
 	obs.draw()
 
-	start_point = [50, 50]
-	goal_point = [450, 450]
+	start_point = (50, 50)
+	goal_point = (450, 450)
 	goal_tolerance = 20
 	obs_resolution = 5
 	rrt_star_smart = RRTStarSmart(start_point, goal_point,

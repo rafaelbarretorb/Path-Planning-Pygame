@@ -25,7 +25,8 @@ class Tree:
 				 epsilon_max,
 				 max_num_nodes,
 				 screen,
-				 obstacles, obs_resolution):
+				 obstacles, obs_resolution,
+				 biasing_radius=None):
 		""" ."""
 		self.is_start_tree = is_start_tree
 		self.nodes = list()
@@ -62,6 +63,11 @@ class Tree:
 
 		# Draw Tree Start Node
 		self.draw_node(start_point, radius=8)
+
+
+		# RRT*-Smart
+		self.biasing_radius = biasing_radius
+		self.beacons = list()
 
 		pygame.display.update()
 
@@ -122,18 +128,57 @@ class Tree:
 
 		pygame.display.update()
 
-	def grow_tree(self):
+	# def grow_tree(self, random_sample=True):
+	# 	""" ."""
+	# 	found_next = False
+	# 	if random_sample:
+	# 		while found_next == False:
+	# 			p_rand = self.sample_free(random_sample)
+	# 			n_nearest = self.get_nearest(p_rand)
+	# 			p_new = self.steer(n_nearest.point, p_rand)
+	# 			if self.obstacle_free(n_nearest.point, p_new):
+	# 				found_next = True
+	# 				self.insert_node(p_new, n_nearest)
+	# 	else:
+	# 		for beacon in self.beacons:
+	# 			while found_next == False:
+	# 				p_rand = self.sample_free(random_sample=False, beacon=beacon.point)
+	# 				n_nearest = self.get_nearest(p_rand)
+	# 				p_new = self.steer(n_nearest.point, p_rand)
+	# 				if self.obstacle_free(n_nearest.point, p_new):
+	# 					found_next = True
+	# 					self.insert_node(p_new, n_nearest)
+
+	def grow_tree(self, random_sample=True):
 		""" ."""
 		found_next = False
-		while found_next == False:
-			p_rand = self.sample_free()
-			n_nearest = self.get_nearest(p_rand)
-			p_new = self.steer(n_nearest.point, p_rand)
-			if self.obstacle_free(n_nearest.point, p_new):
-				found_next = True
-				self.insert_node(p_new, n_nearest)
-				# time.sleep(0.01)
-	
+		if random_sample:
+			while found_next == False:
+				p_rand = self.sample_free()
+				if self.found_next_node(p_rand):
+					found_next = True
+		else:
+			print "Intelligent Sampling!!!"
+			print "Number of beacons: " + str(len(self.beacons))
+			for i in range(10):
+				for beacon in self.beacons:
+					found_next = False
+					# print "beacon: " + str(beacon.point)
+					while found_next == False:
+						p_rand = self.sample_free(random_sample=False, beacon_point=beacon.point)
+						if self.found_next_node(p_rand):
+							found_next = True
+
+	def found_next_node(self, random_point):
+		""" ."""
+		n_nearest = self.get_nearest(random_point)
+		p_new = self.steer(n_nearest.point, random_point)
+		if self.obstacle_free(n_nearest.point, p_new):
+			self.insert_node(p_new, n_nearest)
+			return True
+		else:
+			return False
+		
 	def insert_node(self, p_new, n_nearest):
 		""" ."""
 		parent_node = n_nearest
@@ -156,14 +201,28 @@ class Tree:
 		# uncomment to make animation slow
 		# time.sleep(0.05)
 
-	def sample_free(self):
+	def sample_free(self, random_sample=True, beacon_point=None):
 		"""  Get a random point located in a free area
 		random.random() returns a random number between 0 and 1
 		point_rand = RANDOM_NUMBER * XDIM, RANDOM_NUMBER * YDIM
 		"""
-		# TODO no collision yet
 		for i in range(1000):
-			return int((random.random())*500), int((random.random())*500)
+			if not random_sample:
+				x_rand = int(beacon_point[0] + self.biasing_radius * 2 * (random.random() - 0.5))
+				y_rand = int(beacon_point[1] + self.biasing_radius * 2 * (random.random() - 0.5))
+				p_rand = x_rand, y_rand
+
+				# time.sleep(0.5)
+				# Check collision
+				if not self.collision(p_rand):
+					# print "beacon: " + str(beacon_point) + " --> " + str(p_rand)
+					return p_rand
+			else:
+				p_rand = int((random.random())*500), int((random.random())*500)
+
+				# Check collision
+				if not self.collision(p_rand):
+					return p_rand
 
 		sys.exit("ERROR MESSAGE: Samples in free space fail after 1000 attempts!!!")
 
@@ -251,12 +310,17 @@ class Tree:
 		path = list()
 		current_node = self.goal
 
+		self.beacons = list()
+
 		while current_node.parent != None:
 			path.insert(0, current_node.point)
+			self.beacons.append(current_node)
+
 			current_node = current_node.parent
 
 		# Add the start point
 		path.insert(0, current_node.point)
+		self.beacons.insert(0, current_node)
 
 		self.draw_current_path(path)
 
