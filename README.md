@@ -1,8 +1,21 @@
-## Under Construction!
-
 ### Path Planning Algorithms demonstration using PyGame
 
+RRT
 
-RRT* Path Planning Algorithm (No obstacles for now)
+![](gifs/rrt.gif)
 
-![](RRT_Star/gifs/rrt-star.gif)
+
+RRT*
+
+![](gifs/rrt_star.gif)
+
+
+RRT*-Smart
+
+![](gifs/rrt_star_smart.gif)
+
+
+RRT*-Smart Dual Tree
+
+![](gifs/rrt_star_smart_dual_tree.gif)
+

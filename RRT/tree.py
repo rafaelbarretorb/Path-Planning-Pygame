@@ -14,7 +14,7 @@ RADIUS = 50.0
 
 class Tree:
 	def __init__(self,
-	             name,
+	             is_start_tree,
 				 start_point,
 				 node_color,
 				 connection_color,
@@ -24,13 +24,17 @@ class Tree:
 				 epsilon_min,
 				 epsilon_max,
 				 max_num_nodes,
-				 screen):
+				 screen,
+				 obstacles, obs_resolution,
+				 biasing_radius=None):
 		""" ."""
-		self.tree_name = name
+		self.is_start_tree = is_start_tree
 		self.nodes = list()
 		self.new_node = None
 
 		self.screen = screen
+		self.obstacles = obstacles
+		self.obs_resolution = obs_resolution
 
 		self.k = 20.0
 		self.radius = 100.0
@@ -60,6 +64,11 @@ class Tree:
 		# Draw Tree Start Node
 		self.draw_node(start_point, radius=8)
 
+
+		# RRT*-Smart
+		self.biasing_radius = biasing_radius
+		self.beacons = list()
+
 		pygame.display.update()
 
 	def get_nodes_length(self):
@@ -79,7 +88,8 @@ class Tree:
 			cost_p_2_new_n = parent.cost + dist(parent.point, new_node.point)
 
 			if d < RADIUS and cost_n_2_new_n < cost_p_2_new_n:
-				parent = node
+				if self.obstacle_free(node.point, new_node.point):
+					parent = node
 
 		new_node.cost = parent.cost + dist(parent.point, new_node.point)
 		new_node.parent = parent
@@ -101,15 +111,16 @@ class Tree:
 			cost_new_n_2_n = new_node.cost + dist(node.point, new_node.point)
 
 			if node != new_n_p and d < RADIUS and cost_new_n_2_n < node.cost:
-				# Delete, paint white
-				self.erase_connection(node.point, node.parent.point)
+				if self.obstacle_free(node.point, new_node.point):
+					# Delete, paint white
+					self.erase_connection(node.point, node.parent.point)
 
-				# Now the node parent is the new node
-				node.parent = new_node
-				node.cost = new_node.cost + dist(node.point, new_node.point)
-				
-				# Draw
-				self.draw_connection(node.point, new_node.point)
+					# Now the node parent is the new node
+					node.parent = new_node
+					node.cost = new_node.cost + dist(node.point, new_node.point)
+					
+					# Draw
+					self.draw_connection(node.point, new_node.point)
 					
 			else:
 				if node.parent != None:
@@ -117,24 +128,50 @@ class Tree:
 
 		pygame.display.update()
 
-	def grow_tree(self):
+	def grow_tree(self, random_sample=True, samples_per_beacon=5, optimization=True):
 		""" ."""
+		time.sleep(0.01)
 		found_next = False
-		while found_next == False:
-			p_rand = self.sample_free()
-			n_nearest = self.get_nearest(p_rand)
-			n_new = self.steer(n_nearest.point, p_rand)
-			if self.obstacle_free(n_nearest, n_new):
-				found_next = True
-				self.insert_node(n_new, n_nearest)
-	
-	def insert_node(self, n_new, n_nearest):
+		if random_sample:
+			while found_next == False:
+				p_rand = self.sample_free()
+				if self.found_next_node(p_rand, optimization):
+					found_next = True
+		else:
+			# Intelligent Sampling only the intermediate beacons
+			start = 1
+			end = (len(self.beacons) - 1)
+			for i in range(samples_per_beacon):
+				for beacon in self.beacons[start: end]:
+					found_next = False
+					while found_next == False:
+						p_rand = self.sample_free(random_sample=False, beacon_point=beacon.point)
+						if self.found_next_node(p_rand, optimization):
+							found_next = True
+
+	def found_next_node(self, random_point, optimization=True):
+		""" ."""
+		n_nearest = self.get_nearest(random_point)
+		p_new = self.steer(n_nearest.point, random_point)
+		if self.obstacle_free(n_nearest.point, p_new):
+			self.insert_node(p_new, n_nearest, optimization)
+			return True
+		else:
+			return False
+		
+	def insert_node(self, p_new, n_nearest, optimization=True):
 		""" ."""
 		parent_node = n_nearest
-		new_node = Node(n_new, parent_node)
-		new_node = self.choose_parent(new_node, parent_node)
+		new_node = Node(p_new, parent_node)
+		if optimization:
+			new_node = self.choose_parent(new_node, parent_node)
 		self.nodes.append(new_node)
-		self.rewire(new_node)            
+
+		self.nodes[-1].id = len(self.nodes) - 1
+
+		if optimization:
+			self.rewire(new_node)
+	            
 		self.new_node = self.nodes[-1]
 
 		# Draw the new connection
@@ -148,14 +185,22 @@ class Tree:
 		# uncomment to make animation slow
 		# time.sleep(0.05)
 
-	def sample_free(self):
+	def sample_free(self, random_sample=True, beacon_point=None):
 		"""  Get a random point located in a free area
 		random.random() returns a random number between 0 and 1
 		point_rand = RANDOM_NUMBER * XDIM, RANDOM_NUMBER * YDIM
 		"""
-		# TODO no collision yet
 		for i in range(1000):
-			return int((random.random())*500), int((random.random())*500)
+			if not random_sample:
+				x_rand = int(beacon_point[0] + self.biasing_radius * 2 * (random.random() - 0.5))
+				y_rand = int(beacon_point[1] + self.biasing_radius * 2 * (random.random() - 0.5))
+				p_rand = x_rand, y_rand
+			else:
+				p_rand = int((random.random())*500), int((random.random())*500)
+
+			# Check collision
+			if not self.collision(p_rand):
+				return p_rand
 
 		sys.exit("ERROR MESSAGE: Samples in free space fail after 1000 attempts!!!")
 
@@ -187,7 +232,7 @@ class Tree:
 
 		if dist(n_nearest.point, external_node.point) < self.goal_tolerance:
 			# check collision
-			if self.obstacle_free(n_nearest, external_node):
+			if self.obstacle_free(n_nearest.point, external_node.point):
 				self.n_nearest_ext = n_nearest
 				return True
 		return False
@@ -196,10 +241,6 @@ class Tree:
 		""" Update the radius of the algorithm optimization area."""
 		nodes_size = len(self.nodes) + 1
 		self.radius = self.k*math.sqrt((math.log(nodes_size) / nodes_size))
-
-	def obstacle_free(self, n1, n2):
-		""" Check if there is an obstacle between nodes n1 and n2."""
-		return True
 
 	# TODO improve name of this method
 	def get_external_nodes(self, n_nearest_ext):
@@ -226,7 +267,6 @@ class Tree:
 		""" Add a set of external nodes to this tree."""
 		current_parent = parent_node
 
-		nodes_index = len(self.nodes)
 		for node in external_nodes:
 			node.parent = current_parent
 			node.cost = current_parent.cost + dist(node.point, current_parent.point)
@@ -236,6 +276,11 @@ class Tree:
 			# add to the nodes list
 			self.nodes.append(node)
 
+			# Update node id
+			id = len(self.nodes) - 1
+			self.nodes[len(self.nodes) - 1].id = id
+
+		# Set New Goal
 		self.goal = self.nodes[len(self.nodes) - 1]
 	
 	def block_tree(self):
@@ -248,15 +293,23 @@ class Tree:
 		path = list()
 		current_node = self.goal
 
+		self.beacons = list()
+
 		while current_node.parent != None:
 			path.insert(0, current_node.point)
+			self.beacons.insert(0, current_node)
+
 			current_node = current_node.parent
 
 		# Add the start point
 		path.insert(0, current_node.point)
-		
-		# Draw path
+		self.beacons.insert(0, current_node)
+
 		self.draw_current_path(path)
+
+		if not self.is_start_tree_the_last():
+			path.reverse()
+		
 		return path
 
 	def draw_current_path(self, path):
@@ -268,9 +321,7 @@ class Tree:
 		
 		pygame.display.update()
 		
-		self.path_old = []
-
-		pygame.display.update()
+		self.path_old = path[:]
 
 		# Draw new path
 		for i in range(len(path) - 1):
@@ -291,19 +342,80 @@ class Tree:
 
 	def draw_path(self, point1, point2):
 		""" Draw a path line between two nodes with a larger width."""
-		pygame.draw.line(self.screen, self.path_color, point1, point2, 4)
+		pygame.draw.line(self.screen, self.path_color, point1, point2, 6)
 
 	def erase_path(self, point1, point2):
 		""" Erase the path line between two nodes."""
-		pygame.draw.line(self.screen, WHITE, point1, point2, 4)
+		pygame.draw.line(self.screen, WHITE, point1, point2, 6)
 
 	def draw_node(self, point, radius=4, color=None):
 		""" Draw a circle representing a node."""
 		if color is None:
 			color = self.node_color
 
-		pygame.draw.circle(self.screen, color, point, radius)
+		pygame.draw.circle(self.screen, color, (point[0], point[1]), radius)
 
 	def is_tree_blocked(self):
 		""" Returns true if this tree is blocked, false otherwise."""
 		return self.tree_blocked
+
+	def set_goal(self, goal_node):
+		""" Set goal node. Necessary for RRT* that has just one Tree growing."""
+		self.goal = goal_node
+
+	def get_goal(self):
+		""" Get goal node."""
+		return self.goal
+
+	def path_optimization(self):
+		""" Path Optimization.
+		    Only RRT*-Smart algorithm """
+		current_node = self.goal
+
+		while current_node.parent.parent != None:
+			if self.obstacle_free(current_node.point, current_node.parent.parent.point):
+				# Update parent node
+				current_node.parent = current_node.parent.parent
+				self.nodes[current_node.id].parent = current_node.parent
+
+				# Update current node cost
+				parent_cost = current_node.parent.cost
+				dist_cost = dist(current_node.parent.point, current_node.point)
+				self.nodes[current_node.id].cost = parent_cost + dist_cost
+			
+			if current_node.parent.parent == None:
+				break
+			current_node = current_node.parent
+	
+		return self.compute_path()
+
+	def collision(self, p):
+		""" Check if the point p is located inside some obstacle."""
+		return self.obstacles.check_collision(p[0], p[1])
+
+	def step_n_from_p1_to_p2(self, p1, p2, n):
+		""" ."""
+		theta = math.atan2(p2[1]-p1[1], p2[0]-p1[0])
+		return (p1[0] + n*self.obs_resolution*math.cos(theta),
+				p1[1] + n*self.obs_resolution*math.sin(theta))
+	
+	def obstacle_free(self, p1, p2):
+		""" Check if there is an obstacle between points p1 and p2."""
+		distance = dist(p1, p2)
+		n = 1
+		if distance < self.obs_resolution:
+			if self.collision(p2):
+				return False
+			else:
+				return True
+		else:
+			for i in range(int(math.floor(distance/self.obs_resolution))):
+				p_i = self.step_n_from_p1_to_p2(p1, p2, i + 1)
+				if self.collision(p_i):
+					return False
+
+			return True
+
+	def is_start_tree_the_last(self):
+		""" ."""
+		return self.is_start_tree

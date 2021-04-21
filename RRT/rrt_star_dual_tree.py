@@ -1,17 +1,24 @@
 #!/usr/bin/env python
 
-from constants import GREEN, RED, BLACK, BLUE
+import pygame
+import sys
+
+from constants import GREEN, RED, BLACK, WHITE
 from tree import Tree
 
-import pygame
+from obstacles import Obstacles
 
 
 class RRTStarDualTree:
-    """ Class for RRT* Path Planning. """
+    """ Class for RRT* Dual Tree Path Planning. """
     def __init__(self, start_point, goal_point,
                  max_num_nodes, min_num_nodes,
-                 goal_tolerance, epsilon_min, epsilon_max, screen):
+                 goal_tolerance, epsilon_min, epsilon_max, screen,
+                 obstacles, obs_resolution):
         self.screen = screen
+        self.obstacles = obstacles
+        self.obs_resolution = obs_resolution
+
         self.start_point = start_point
         self.goal_point = goal_point
 
@@ -22,29 +29,33 @@ class RRTStarDualTree:
 
         self.goal_tolerance = goal_tolerance
 
-        self.start_tree = Tree('start',
+        self.start_tree = Tree(True,
                                start_point,
                                node_color=GREEN,
                                connection_color=GREEN,
-                               goal_node_color=BLUE,
-                               path_color=RED,
+                               goal_node_color=RED,
+                               path_color=BLACK,
                                goal_tolerance=20,
                                epsilon_min=epsilon_min,
                                epsilon_max=epsilon_max,
                                max_num_nodes=5000,
-                               screen=self.screen)
+                               screen=self.screen,
+                               obstacles=self.obstacles,
+                               obs_resolution=self.obs_resolution)
 
-        self.goal_tree = Tree('goal',
+        self.goal_tree = Tree(False,
                               goal_point,
-                              node_color=BLUE,
-                              connection_color=BLUE,
+                              node_color=RED,
+                              connection_color=RED,
                               goal_node_color=GREEN,
-                              path_color=RED,
+                              path_color=BLACK,
                               goal_tolerance=20,
                               epsilon_min=epsilon_min,
                               epsilon_max=epsilon_max,
                               max_num_nodes=5000,
-                              screen=self.screen)
+                              screen=self.screen,
+                              obstacles=self.obstacles,
+                              obs_resolution=self.obs_resolution)
 
         self.tree = None
 
@@ -65,7 +76,7 @@ class RRTStarDualTree:
                 if self.tree.get_nodes_length() > self.min_num_nodes:
                     return path
         
-        return [], []
+        return path
 
     def run_tree(self, tree_obj, other_tree_obj):
         if tree_obj.is_tree_blocked():
@@ -106,3 +117,49 @@ class RRTStarDualTree:
                 return False
             else:
                 return True
+
+
+def main():
+    XDIM = 500
+    YDIM = 500
+    WINSIZE = [XDIM, YDIM]
+    EPSILON = 7.0
+    MAX_NUM_NODES = 1000
+    MIN_NUM_NODES = 500
+    pygame.init()
+    screen = pygame.display.set_mode(WINSIZE)
+    pygame.display.set_caption('RRT* Dual Tree Path Planning')
+    screen.fill(WHITE)
+
+    # Obstacles
+    obs = Obstacles(screen, BLACK)
+    obs.make_circle(150, 150, 50)
+    obs.make_rect(250, 100, 50, 300)
+    obs.draw()
+
+    obs_resolution = 5
+
+    start_point = [50, 50]
+    goal_point = [400, 400]
+    goal_tolerance = 20
+
+    rrt_star = RRTStarDualTree(start_point, goal_point,
+                               MAX_NUM_NODES, MIN_NUM_NODES, goal_tolerance, 0, 30, 
+                               screen, obs, obs_resolution)
+
+    path = rrt_star.planning()
+    pause = True
+    # for e in pygame.event.get():
+    #     if e.type == QUIT or (e.type == KEYUP and e.key == K_ESCAPE):
+    #         sys.exit("Leaving because you requested it.")
+    # pygame.display.update()
+
+    while pause:
+        for event in pygame.event.get():
+
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+
+if __name__ == '__main__':
+    main()
