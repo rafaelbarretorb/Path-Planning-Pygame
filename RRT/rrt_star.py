@@ -3,7 +3,7 @@
 import pygame
 import sys
 
-from constants import GREEN, RED, BLACK, WHITE, YELLOW, PURPLE
+from constants import GREEN, RED, BLACK, WHITE, YELLOW, PURPLE, GRAY
 from tree import Tree
 from helper_functions import dist
 from node import Node
@@ -104,48 +104,43 @@ class RRTStar:
         return False
 
 
-XDIM = 500
-YDIM = 500
-WINSIZE = (XDIM, YDIM)
-EPSILON = 7.0
-MAX_NUM_NODES = 1000
-MIN_NUM_NODES = 200
-
 def main():
+    XDIM = 500
+    YDIM = 500
+    WINSIZE = (XDIM, YDIM)
+    MAX_NUM_NODES = 800
+    MIN_NUM_NODES = 400
     pygame.init()
-    # set_mode(size=(0, 0), flags=0, depth=0, display=0, vsync=0)
-    screen = pygame.display.set_mode(WINSIZE, pygame.RESIZABLE, 32)
+    screen = pygame.display.set_mode(WINSIZE)
     pygame.display.set_caption('RRT* Path Planning')
     screen.fill(WHITE)
+    running = True
 
     # Obstacles
-    obs = Obstacles(screen, BLACK)
+    obs = Obstacles(screen, GRAY)
     obs.make_circle(150, 150, 50)
     obs.make_rect(250, 100, 50, 300)
     obs.draw()
 
     obs_resolution = 5
 
-    start_point = [50, 50]
-    goal_point = [400, 400]
+    start_point = (50, 50)
+    goal_point = (400, 400)
     goal_tolerance = 20
+
     rrt_star = RRTStar(start_point, goal_point, MAX_NUM_NODES, MIN_NUM_NODES,
                        goal_tolerance, 0, 30, screen,
                        obs, obs_resolution)
 
     path = rrt_star.planning()
-    pause = True
-    # for e in pygame.event.get():
-    #     if e.type == QUIT or (e.type == KEYUP and e.key == K_ESCAPE):
-    #         sys.exit("Leaving because you requested it.")
-    # pygame.display.update()
+    print "Final Path: "
+    print path
 
-    while pause:
+    while running:
         for event in pygame.event.get():
-
             if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
+                running = False
+
 
 if __name__ == '__main__':
     main()

@@ -128,42 +128,49 @@ class Tree:
 
 		pygame.display.update()
 
-	def grow_tree(self, random_sample=True):
+	def grow_tree(self, random_sample=True, samples_per_beacon=5, optimization=True):
 		""" ."""
 		found_next = False
 		if random_sample:
 			while found_next == False:
 				p_rand = self.sample_free()
-				if self.found_next_node(p_rand):
+				if self.found_next_node(p_rand, optimization):
 					found_next = True
 		else:
-			# Intelligent Sampling
-			for beacon in self.beacons:
-				found_next = False
-				while found_next == False:
-					p_rand = self.sample_free(random_sample=False, beacon_point=beacon.point)
-					if self.found_next_node(p_rand):
-						found_next = True
+			# Intelligent Sampling only the intermediate beacons
+			start = 1
+			end = (len(self.beacons) - 1)
+			for i in range(samples_per_beacon):
+				for beacon in self.beacons[start: end]:
+					found_next = False
+					while found_next == False:
+						p_rand = self.sample_free(random_sample=False, beacon_point=beacon.point)
+						if self.found_next_node(p_rand, optimization):
+							found_next = True
 
-	def found_next_node(self, random_point):
+	def found_next_node(self, random_point, optimization=True):
 		""" ."""
 		n_nearest = self.get_nearest(random_point)
 		p_new = self.steer(n_nearest.point, random_point)
 		if self.obstacle_free(n_nearest.point, p_new):
-			self.insert_node(p_new, n_nearest)
+			self.insert_node(p_new, n_nearest, optimization)
 			return True
 		else:
 			return False
 		
-	def insert_node(self, p_new, n_nearest):
+	def insert_node(self, p_new, n_nearest, optimization=True):
 		""" ."""
 		parent_node = n_nearest
 		new_node = Node(p_new, parent_node)
-		new_node = self.choose_parent(new_node, parent_node)
+		if optimization:
+			new_node = self.choose_parent(new_node, parent_node)
 		self.nodes.append(new_node)
 
 		self.nodes[-1].id = len(self.nodes) - 1
-		self.rewire(new_node)            
+
+		if optimization:
+			self.rewire(new_node)
+	            
 		self.new_node = self.nodes[-1]
 
 		# Draw the new connection
@@ -289,7 +296,7 @@ class Tree:
 
 		while current_node.parent != None:
 			path.insert(0, current_node.point)
-			self.beacons.append(current_node)
+			self.beacons.insert(0, current_node)
 
 			current_node = current_node.parent
 

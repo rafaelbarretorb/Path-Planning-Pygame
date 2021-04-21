@@ -14,7 +14,8 @@ class RRTStarSmartDualTree:
 	def __init__(self, start_point, goal_point,
                  max_num_nodes, min_num_nodes,
                  goal_tolerance, epsilon_min, epsilon_max, screen,
-                 obstacles, obs_resolution):
+                 obstacles, obs_resolution,
+				 biasing_ratio):
 		self.screen = screen
 		self.obstacles = obstacles
 		self.obs_resolution = obs_resolution
@@ -65,14 +66,14 @@ class RRTStarSmartDualTree:
 
 		self.n = None  # iteration where initial path found
 		self.it = 0
+		self.biasing_ratio = biasing_ratio
 
 	def planning(self):
 		""" ."""
-		b = 100
 		j = 1
 		first_path_computed = False
 		while self.keep_searching():
-			if self.n != None and self.it == (self.n + j*b):
+			if self.n != None and self.it == (self.n + j*self.biasing_ratio):
 				self.tree.grow_tree(random_sample=False)
 				j = j + 1
 				
@@ -136,18 +137,18 @@ class RRTStarSmartDualTree:
 			return True
 
 
-XDIM = 500
-YDIM = 500
-WINSIZE = [XDIM, YDIM]
-EPSILON = 7.0
-MAX_NUM_NODES = 2000
-MIN_NUM_NODES = 500
-
 def main():
+	XDIM = 500
+	YDIM = 500
+	WINSIZE = [XDIM, YDIM]
+	MAX_NUM_NODES = 800
+	MIN_NUM_NODES = 400
 	pygame.init()
 	screen = pygame.display.set_mode(WINSIZE)
 	pygame.display.set_caption('RRT* Dual Tree Path Planning')
 	screen.fill(WHITE)
+	running = True
+	pygame.display.flip()
 
 	# Obstacles
 	obs = Obstacles(screen, GRAY)
@@ -161,25 +162,22 @@ def main():
 	goal_point = (400, 400)
 	goal_tolerance = 20
 
+	bias_ratio = 50
+	
 	rrt_star_smart_dual = RRTStarSmartDualTree(start_point, goal_point,
 								MAX_NUM_NODES, MIN_NUM_NODES, goal_tolerance, 0, 30, 
-								screen, obs, obs_resolution)
+								screen, obs, obs_resolution,
+								bias_ratio)
 
 	path = rrt_star_smart_dual.planning()
-	print "Path: "
+
+	print "Final Path: "
 	print path
-	pause = True
-	# for e in pygame.event.get():
-	#     if e.type == QUIT or (e.type == KEYUP and e.key == K_ESCAPE):
-	#         sys.exit("Leaving because you requested it.")
-	# pygame.display.update()
 
-	while pause:
+	while running:
 		for event in pygame.event.get():
-
 			if event.type == pygame.QUIT:
-				pygame.quit()
-                quit()
+				running = False
 
 
 if __name__ == '__main__':
