@@ -145,7 +145,7 @@ def main():
 	MIN_NUM_NODES = 400
 	pygame.init()
 	screen = pygame.display.set_mode(WINSIZE)
-	pygame.display.set_caption('RRT* Dual Tree Path Planning')
+	pygame.display.set_caption('RRT*-Smart Dual Tree Path Planning')
 	screen.fill(WHITE)
 	running = True
 	pygame.display.flip()

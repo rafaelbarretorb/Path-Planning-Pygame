@@ -110,14 +110,12 @@ class RRTStarSmart:
 		return False
 
 
-XDIM = 500
-YDIM = 500
-WINSIZE = (XDIM, YDIM)
-EPSILON = 7.0
-MAX_NUM_NODES = 3000
-MIN_NUM_NODES = 1500
-
 def main():
+	XDIM = 500
+	YDIM = 500
+	WINSIZE = (XDIM, YDIM)
+	MAX_NUM_NODES = 800
+	MIN_NUM_NODES = 400
 	pygame.init()
 	# set_mode(size=(0, 0), flags=0, depth=0, display=0, vsync=0)
 	screen = pygame.display.set_mode(WINSIZE, pygame.RESIZABLE, 32)

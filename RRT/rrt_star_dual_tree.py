@@ -119,14 +119,13 @@ class RRTStarDualTree:
                 return True
 
 
-XDIM = 500
-YDIM = 500
-WINSIZE = [XDIM, YDIM]
-EPSILON = 7.0
-MAX_NUM_NODES = 5000
-MIN_NUM_NODES = 2000
-
 def main():
+    XDIM = 500
+    YDIM = 500
+    WINSIZE = [XDIM, YDIM]
+    EPSILON = 7.0
+    MAX_NUM_NODES = 1000
+    MIN_NUM_NODES = 500
     pygame.init()
     screen = pygame.display.set_mode(WINSIZE)
     pygame.display.set_caption('RRT* Dual Tree Path Planning')

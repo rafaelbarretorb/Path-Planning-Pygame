@@ -130,6 +130,7 @@ class Tree:
 
 	def grow_tree(self, random_sample=True, samples_per_beacon=5, optimization=True):
 		""" ."""
+		time.sleep(0.01)
 		found_next = False
 		if random_sample:
 			while found_next == False:
