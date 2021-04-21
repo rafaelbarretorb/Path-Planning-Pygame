@@ -128,27 +128,6 @@ class Tree:
 
 		pygame.display.update()
 
-	# def grow_tree(self, random_sample=True):
-	# 	""" ."""
-	# 	found_next = False
-	# 	if random_sample:
-	# 		while found_next == False:
-	# 			p_rand = self.sample_free(random_sample)
-	# 			n_nearest = self.get_nearest(p_rand)
-	# 			p_new = self.steer(n_nearest.point, p_rand)
-	# 			if self.obstacle_free(n_nearest.point, p_new):
-	# 				found_next = True
-	# 				self.insert_node(p_new, n_nearest)
-	# 	else:
-	# 		for beacon in self.beacons:
-	# 			while found_next == False:
-	# 				p_rand = self.sample_free(random_sample=False, beacon=beacon.point)
-	# 				n_nearest = self.get_nearest(p_rand)
-	# 				p_new = self.steer(n_nearest.point, p_rand)
-	# 				if self.obstacle_free(n_nearest.point, p_new):
-	# 					found_next = True
-	# 					self.insert_node(p_new, n_nearest)
-
 	def grow_tree(self, random_sample=True):
 		""" ."""
 		found_next = False
@@ -158,16 +137,13 @@ class Tree:
 				if self.found_next_node(p_rand):
 					found_next = True
 		else:
-			print "Intelligent Sampling!!!"
-			print "Number of beacons: " + str(len(self.beacons))
-			for i in range(10):
-				for beacon in self.beacons:
-					found_next = False
-					# print "beacon: " + str(beacon.point)
-					while found_next == False:
-						p_rand = self.sample_free(random_sample=False, beacon_point=beacon.point)
-						if self.found_next_node(p_rand):
-							found_next = True
+			# Intelligent Sampling
+			for beacon in self.beacons:
+				found_next = False
+				while found_next == False:
+					p_rand = self.sample_free(random_sample=False, beacon_point=beacon.point)
+					if self.found_next_node(p_rand):
+						found_next = True
 
 	def found_next_node(self, random_point):
 		""" ."""
@@ -211,18 +187,12 @@ class Tree:
 				x_rand = int(beacon_point[0] + self.biasing_radius * 2 * (random.random() - 0.5))
 				y_rand = int(beacon_point[1] + self.biasing_radius * 2 * (random.random() - 0.5))
 				p_rand = x_rand, y_rand
-
-				# time.sleep(0.5)
-				# Check collision
-				if not self.collision(p_rand):
-					# print "beacon: " + str(beacon_point) + " --> " + str(p_rand)
-					return p_rand
 			else:
 				p_rand = int((random.random())*500), int((random.random())*500)
 
-				# Check collision
-				if not self.collision(p_rand):
-					return p_rand
+			# Check collision
+			if not self.collision(p_rand):
+				return p_rand
 
 		sys.exit("ERROR MESSAGE: Samples in free space fail after 1000 attempts!!!")
 
@@ -298,6 +268,11 @@ class Tree:
 			# add to the nodes list
 			self.nodes.append(node)
 
+			# Update node id
+			id = len(self.nodes) - 1
+			self.nodes[len(self.nodes) - 1].id = id
+
+		# Set New Goal
 		self.goal = self.nodes[len(self.nodes) - 1]
 	
 	def block_tree(self):
@@ -384,20 +359,13 @@ class Tree:
 		""" Get goal node."""
 		return self.goal
 
-	def path_otimization(self):
+	def path_optimization(self):
 		""" Path Optimization.
 		    Only RRT*-Smart algorithm """
-
-		new_path = list()
-		i = 0
 		current_node = self.goal
+
 		while current_node.parent.parent != None:
-			# while self.obstacle_free(current_node, current_node.parent.parent):
 			if self.obstacle_free(current_node.point, current_node.parent.parent.point):
-
-				# if current_node.parent.parent == None:
-				# 	break
-
 				# Update parent node
 				current_node.parent = current_node.parent.parent
 				self.nodes[current_node.id].parent = current_node.parent

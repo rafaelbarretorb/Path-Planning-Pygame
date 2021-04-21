@@ -69,7 +69,6 @@ class RRTStarSmart:
 
 			# Intelligent Sampling
 			if self.n != None and i == (self.n + j*b):
-				
 				self.tree.grow_tree(random_sample=False)
 				j = j + 1
 			else:
@@ -84,16 +83,17 @@ class RRTStarSmart:
 						self.n = i
 
 						# new node is the final goal
-						self.goal_node = self.tree.set_goal(new_node)
+						self.tree.set_goal(new_node)
 						path = self.tree.compute_path()
 				else:
-					path = self.tree.path_otimization()
+					path = self.tree.path_optimization()
 
 			i = i + 1
 		return []
 
 	def keep_searching(self):
 		""" ."""
+		# TODO ???
 		if not self.goal_found:
 			return True
 		else:
@@ -136,8 +136,8 @@ def main():
 	obs_resolution = 5
 	rrt_star_smart = RRTStarSmart(start_point, goal_point,
 	                              MAX_NUM_NODES, MIN_NUM_NODES,
-				                        goal_tolerance, 0, 30, screen,
-																obs, obs_resolution)
+				                goal_tolerance, 0, 30, screen,
+								obs, obs_resolution)
 
 	path = rrt_star_smart.planning()
 	pause = True

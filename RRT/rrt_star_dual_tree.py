@@ -76,7 +76,7 @@ class RRTStarDualTree:
                 if self.tree.get_nodes_length() > self.min_num_nodes:
                     return path
         
-        return []
+        return path
 
     def run_tree(self, tree_obj, other_tree_obj):
         if tree_obj.is_tree_blocked():

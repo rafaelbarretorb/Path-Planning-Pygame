@@ -41,7 +41,8 @@ class RRTStarSmartDualTree:
 								max_num_nodes=5000,
 								screen=self.screen,
 								obstacles=self.obstacles,
-								obs_resolution=self.obs_resolution)
+								obs_resolution=self.obs_resolution,
+								biasing_radius=20.0)
 
 		self.goal_tree = Tree(False,
 								goal_point,
@@ -55,22 +56,26 @@ class RRTStarSmartDualTree:
 								max_num_nodes=5000,
 								screen=self.screen,
 								obstacles=self.obstacles,
-								obs_resolution=self.obs_resolution)
+								obs_resolution=self.obs_resolution,
+								biasing_radius=20.0)
 
 		self.tree = None
 
 		self.goal_found = False
 
+		self.n = None  # iteration where initial path found
+		self.it = 0
+
 	def planning(self):
 		""" ."""
-		i = 0
 		b = 100
 		j = 1
-		n = self.max_num_nodes
+		first_path_computed = False
 		while self.keep_searching():
-			if i == (n + j*b):
-				path = self.tree.path_otimization()
+			if self.n != None and self.it == (self.n + j*b):
+				self.tree.grow_tree(random_sample=False)
 				j = j + 1
+				
 			else:
 				# Start Tree's turn
 				self.run_tree(self.start_tree, self.goal_tree)
@@ -78,14 +83,13 @@ class RRTStarSmartDualTree:
 				# Goal Tree's turn
 				self.run_tree(self.goal_tree, self.start_tree)
 
-			if self.goal_found:
-				path = self.tree.compute_path()
-				if self.tree.get_nodes_length() > self.min_num_nodes:
-					return path
+				if self.goal_found:
+					path = self.tree.path_optimization()
 
-			i = i + 1
+			# Iteration
+			self.it = self.it + 1
 
-		return []
+		return path
 
 	def run_tree(self, tree_obj, other_tree_obj):
 		""" ."""
@@ -102,6 +106,10 @@ class RRTStarSmartDualTree:
 				if other_tree_obj.attempt_connect(new_node):
 					self.goal_found = True
 
+					# Set n
+					it = self.it
+					self.n = it
+
 					# Block Other Tree
 					other_tree_obj.block_tree()
 
@@ -110,31 +118,30 @@ class RRTStarSmartDualTree:
 
 					n_nearest_ext = other_tree_obj.get_n_nearest_external()
 					
-					# Get nodes path from GOAL Tree
+					# Get nodes path from OTHER Tree
 					external_nodes = other_tree_obj.get_external_nodes(n_nearest_ext)
 					
-					#  Add nodes path to START Tree
+					#  Add nodes path to Tree
 					tree_obj.add_nodes_to_tree(external_nodes, new_node)
+
+					path = self.tree.compute_path()
 
 	def keep_searching(self):
 		""" ."""
-		if not self.goal_found:
-			return True
+		start_size = self.start_tree.get_nodes_length()
+		goal_size = self.goal_tree.get_nodes_length()
+		if start_size > self.max_num_nodes or goal_size > self.max_num_nodes:
+			return False
 		else:
-			start_size = self.start_tree.get_nodes_length()
-			goal_size = self.goal_tree.get_nodes_length()
-			if start_size > self.max_num_nodes or goal_size > self.max_num_nodes:
-				return False
-			else:
-				return True
+			return True
 
 
 XDIM = 500
 YDIM = 500
 WINSIZE = [XDIM, YDIM]
 EPSILON = 7.0
-MAX_NUM_NODES = 7000
-MIN_NUM_NODES = 3000
+MAX_NUM_NODES = 2000
+MIN_NUM_NODES = 500
 
 def main():
 	pygame.init()
@@ -150,8 +157,8 @@ def main():
 
 	obs_resolution = 5
 
-	start_point = [50, 50]
-	goal_point = [400, 400]
+	start_point = (50, 50)
+	goal_point = (400, 400)
 	goal_tolerance = 20
 
 	rrt_star_smart_dual = RRTStarSmartDualTree(start_point, goal_point,
@@ -159,7 +166,8 @@ def main():
 								screen, obs, obs_resolution)
 
 	path = rrt_star_smart_dual.planning()
-	print path[0]
+	print "Path: "
+	print path
 	pause = True
 	# for e in pygame.event.get():
 	#     if e.type == QUIT or (e.type == KEYUP and e.key == K_ESCAPE):
