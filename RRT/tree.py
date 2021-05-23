@@ -69,6 +69,8 @@ class Tree:
 		self.biasing_radius = biasing_radius
 		self.beacons = list()
 
+		self.path_cost = None
+
 		pygame.display.update()
 
 	def get_nodes_length(self):
@@ -310,6 +312,8 @@ class Tree:
 		if not self.is_start_tree_the_last():
 			path.reverse()
 		
+		self.compute_path_cost(path)
+		
 		return path
 
 	def draw_current_path(self, path):
@@ -419,3 +423,15 @@ class Tree:
 	def is_start_tree_the_last(self):
 		""" ."""
 		return self.is_start_tree
+
+	def compute_path_cost(self, path):
+		""" Compute the path cost."""
+		cost = 0
+		for i in range(len(path) - 1):
+			cost = dist(path[i], path[i+1])
+
+		self.path_cost = cost
+
+	def get_path_cost(self):
+		""" Returns the path cost."""
+		return self.path_cost

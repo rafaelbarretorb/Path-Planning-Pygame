@@ -15,7 +15,7 @@ class RRTStarSmartDualTree:
                  max_num_nodes, min_num_nodes,
                  goal_tolerance, epsilon_min, epsilon_max, screen,
                  obstacles, obs_resolution,
-				 biasing_ratio):
+				 biasing_ratio, min_path_cost):
 		self.screen = screen
 		self.obstacles = obstacles
 		self.obs_resolution = obs_resolution

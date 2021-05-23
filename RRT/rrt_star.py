@@ -92,7 +92,7 @@ class RRTStar:
             return True
         else:
             tree_size = self.tree.get_nodes_length()
-            if tree_size > self.max_num_nodes:
+            if tree_size > self.max_num_nodes or path_cost > self.min_path_cost:
                 return False
             else:
                 return True
