@@ -80,7 +80,7 @@ class RRT:
 
 	def keep_searching(self):
 		""" ."""
-		tree_size = self.tree.get_nodes_length()
+		tree_size = self.tree.get_tree_size()
 		if tree_size > self.max_num_nodes:
 			return False
 		else:

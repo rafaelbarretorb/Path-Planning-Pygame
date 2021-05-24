@@ -73,7 +73,7 @@ class Tree:
 
 		pygame.display.update()
 
-	def get_nodes_length(self):
+	def get_tree_size(self):
 		""" ."""
 		return len(self.nodes)
 
@@ -132,7 +132,7 @@ class Tree:
 
 	def grow_tree(self, random_sample=True, samples_per_beacon=5, optimization=True):
 		""" ."""
-		time.sleep(0.01)
+		# time.sleep(0.01)
 		found_next = False
 		if random_sample:
 			while found_next == False:
@@ -428,7 +428,7 @@ class Tree:
 		""" Compute the path cost."""
 		cost = 0
 		for i in range(len(path) - 1):
-			cost = dist(path[i], path[i+1])
+			cost = cost + dist(path[i], path[i+1])
 
 		self.path_cost = cost
 

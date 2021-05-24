@@ -73,7 +73,7 @@ class RRTStarDualTree:
 
             if self.goal_found:
                 path = self.tree.compute_path()
-                if self.tree.get_nodes_length() > self.min_num_nodes:
+                if self.tree.get_tree_size() > self.min_num_nodes:
                     return path
         
         return path
@@ -111,8 +111,8 @@ class RRTStarDualTree:
         if not self.goal_found:
             return True
         else:
-            start_size = self.start_tree.get_nodes_length()
-            goal_size = self.goal_tree.get_nodes_length()
+            start_size = self.start_tree.get_tree_size()
+            goal_size = self.goal_tree.get_tree_size()
             if start_size > self.max_num_nodes or goal_size > self.max_num_nodes:
                 return False
             else:
@@ -124,8 +124,8 @@ def main():
     YDIM = 500
     WINSIZE = [XDIM, YDIM]
     EPSILON = 7.0
-    MAX_NUM_NODES = 1000
-    MIN_NUM_NODES = 500
+    MAX_NUM_NODES = 5000
+    MIN_NUM_NODES = 0
     pygame.init()
     screen = pygame.display.set_mode(WINSIZE)
     pygame.display.set_caption('RRT* Dual Tree Path Planning')

@@ -5,6 +5,7 @@ import sys
 
 from constants import GREEN, RED, BLACK, WHITE, GRAY
 from tree import Tree
+from datetime import datetime
 
 from obstacles import Obstacles
 
@@ -15,7 +16,7 @@ class RRTStarSmartDualTree:
                  max_num_nodes, min_num_nodes,
                  goal_tolerance, epsilon_min, epsilon_max, screen,
                  obstacles, obs_resolution,
-				 biasing_ratio, min_path_cost):
+				 biasing_ratio, max_path_cost):
 		self.screen = screen
 		self.obstacles = obstacles
 		self.obs_resolution = obs_resolution
@@ -36,7 +37,7 @@ class RRTStarSmartDualTree:
 								connection_color=GREEN,
 								goal_node_color=RED,
 								path_color=BLACK,
-								goal_tolerance=20,
+								goal_tolerance=goal_tolerance,
 								epsilon_min=epsilon_min,
 								epsilon_max=epsilon_max,
 								max_num_nodes=5000,
@@ -51,7 +52,7 @@ class RRTStarSmartDualTree:
 								connection_color=RED,
 								goal_node_color=GREEN,
 								path_color=BLACK,
-								goal_tolerance=20,
+								goal_tolerance=goal_tolerance,
 								epsilon_min=epsilon_min,
 								epsilon_max=epsilon_max,
 								max_num_nodes=5000,
@@ -68,10 +69,17 @@ class RRTStarSmartDualTree:
 		self.it = 0
 		self.biasing_ratio = biasing_ratio
 
+		self.max_path_cost = max_path_cost
+
+		self.start_time = datetime.now()
+		self.end_time = 0.0
+		print ''
+
 	def planning(self):
 		""" ."""
 		j = 1
 		first_path_computed = False
+		path = []
 		while self.keep_searching():
 			if self.n != None and self.it == (self.n + j*self.biasing_ratio):
 				self.tree.grow_tree(random_sample=False)
@@ -105,6 +113,8 @@ class RRTStarSmartDualTree:
 
 			if not self.goal_found:
 				if other_tree_obj.attempt_connect(new_node):
+					self.tree = tree_obj
+					print 'Tree size when goal found: ' + str(self.tree.get_tree_size())
 					self.goal_found = True
 
 					# Set n
@@ -113,9 +123,6 @@ class RRTStarSmartDualTree:
 
 					# Block Other Tree
 					other_tree_obj.block_tree()
-
-					# # TODO review remove
-					self.tree = tree_obj
 
 					n_nearest_ext = other_tree_obj.get_n_nearest_external()
 					
@@ -129,20 +136,41 @@ class RRTStarSmartDualTree:
 
 	def keep_searching(self):
 		""" ."""
-		start_size = self.start_tree.get_nodes_length()
-		goal_size = self.goal_tree.get_nodes_length()
-		if start_size > self.max_num_nodes or goal_size > self.max_num_nodes:
-			return False
+		tree_size = max(self.start_tree.get_tree_size(), self.goal_tree.get_tree_size() )
+
+		self.end_time = datetime.now()
+		duration = self.end_time - self.start_time
+
+		if tree_size < self.max_num_nodes:
+			if not self.goal_found:
+				return True
+			else:
+				if tree_size > self.min_num_nodes and self.tree.get_path_cost() <= self.max_path_cost:
+					self.print_final_info(tree_size, duration, self.tree.get_path_cost())
+					return False
+				else:
+					return True
 		else:
-			return True
+			self.print_final_info(tree_size, duration, self.tree.get_path_cost())
+			return False
+
+	def print_final_info(self, tree_size, duration, path_cost=None):
+		if path_cost == None:
+			print 'Path NOT found.'
+		else:
+			print 'Path cost: ' + str(self.tree.get_path_cost())
+
+		print 'Algorithm duration: ' + str(duration.total_seconds())
+		print 'Number of nodes: ' + str(tree_size)
+		
 
 
 def main():
 	XDIM = 500
 	YDIM = 500
 	WINSIZE = [XDIM, YDIM]
-	MAX_NUM_NODES = 800
-	MIN_NUM_NODES = 400
+	MAX_NUM_NODES = 5000
+	MIN_NUM_NODES = 0
 	pygame.init()
 	screen = pygame.display.set_mode(WINSIZE)
 	pygame.display.set_caption('RRT*-Smart Dual Tree Path Planning')
@@ -160,14 +188,15 @@ def main():
 
 	start_point = (50, 50)
 	goal_point = (400, 400)
-	goal_tolerance = 20
+	goal_tolerance = 10
 
-	bias_ratio = 50
+	bias_ratio = 100
+	max_path_cost = 565
 	
 	rrt_star_smart_dual = RRTStarSmartDualTree(start_point, goal_point,
 								MAX_NUM_NODES, MIN_NUM_NODES, goal_tolerance, 0, 30, 
 								screen, obs, obs_resolution,
-								bias_ratio)
+								bias_ratio, max_path_cost)
 
 	path = rrt_star_smart_dual.planning()
 
